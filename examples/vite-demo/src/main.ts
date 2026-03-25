@@ -1,8 +1,15 @@
 import "./style.css";
-import { createPPOcrV5 } from "ffocr";
+import {
+  createPPOcrV5,
+  getExecutionProviderSupport,
+  type ExecutionProvider
+} from "ffocr";
 
 const imageInput = document.querySelector<HTMLInputElement>("#image-input");
 const modelBaseUrlInput = document.querySelector<HTMLInputElement>("#model-base-url");
+const providerSelect = document.querySelector<HTMLSelectElement>("#provider-select");
+const providerNote = document.querySelector<HTMLElement>("#provider-note");
+const providerDetected = document.querySelector<HTMLElement>("#provider-detected");
 const runButton = document.querySelector<HTMLButtonElement>("#run-button");
 const preview = document.querySelector<HTMLImageElement>("#preview");
 const status = document.querySelector<HTMLElement>("#status");
@@ -20,6 +27,9 @@ function assertElement<T>(value: T | null, label: string): T {
 const ui = {
   imageInput: assertElement(imageInput, "#image-input"),
   modelBaseUrlInput: assertElement(modelBaseUrlInput, "#model-base-url"),
+  providerSelect: assertElement(providerSelect, "#provider-select"),
+  providerNote: assertElement(providerNote, "#provider-note"),
+  providerDetected: assertElement(providerDetected, "#provider-detected"),
   runButton: assertElement(runButton, "#run-button"),
   preview: assertElement(preview, "#preview"),
   status: assertElement(status, "#status"),
@@ -35,7 +45,70 @@ function getDefaultModelBaseUrl(): string {
   return new URL("../models/pp-ocrv5/", window.location.href).toString().replace(/\/$/, "");
 }
 
+function formatProviderLabel(provider: ExecutionProvider): string {
+  switch (provider) {
+    case "webgpu":
+      return "WebGPU";
+    case "webnn":
+      return "WebNN";
+    case "webgl":
+      return "WebGL";
+    case "wasm":
+      return "WASM";
+  }
+}
+
+function updateProviderUi(): void {
+  const support = getExecutionProviderSupport();
+  const available = support.filter((item) => item.available);
+  const unavailable = support.filter((item) => !item.available);
+
+  ui.providerSelect.replaceChildren();
+
+  const autoOption = document.createElement("option");
+  autoOption.value = "auto";
+  autoOption.textContent =
+    available.length > 1
+      ? "Auto (benchmark fastest)"
+      : `Auto (${formatProviderLabel(available[0]?.provider ?? "wasm")})`;
+  ui.providerSelect.append(autoOption);
+
+  available.forEach((item) => {
+    const option = document.createElement("option");
+    option.value = item.provider;
+    option.textContent = formatProviderLabel(item.provider);
+    ui.providerSelect.append(option);
+  });
+
+  ui.providerSelect.value = "auto";
+  ui.providerNote.textContent =
+    available.length > 1
+      ? "Auto will benchmark the detected providers and pick the fastest one."
+      : "Only one provider is available in this browser, so auto and manual selection will use the same runtime.";
+
+  ui.providerDetected.replaceChildren(
+    ...support.map((item) => {
+      const badge = document.createElement("span");
+      badge.className = item.available ? "provider-pill is-available" : "provider-pill is-unavailable";
+      badge.textContent = `${formatProviderLabel(item.provider)} ${item.available ? "available" : "unavailable"}`;
+      return badge;
+    })
+  );
+
+  if (available.length === 0) {
+    ui.providerNote.textContent =
+      "No browser runtime was detected up front. The demo will still try WASM when you run OCR.";
+  }
+
+  if (unavailable.length === 0) {
+    ui.providerDetected.dataset.allAvailable = "true";
+  } else {
+    delete ui.providerDetected.dataset.allAvailable;
+  }
+}
+
 ui.modelBaseUrlInput.value = getDefaultModelBaseUrl();
+updateProviderUi();
 
 ui.runButton.addEventListener("click", async () => {
   const file = ui.imageInput.files?.[0];
@@ -54,11 +127,13 @@ ui.runButton.addEventListener("click", async () => {
   ui.preview.src = objectUrl;
   ui.resultText.textContent = "";
   ui.resultRuntime.textContent = "";
-  ui.status.textContent = "Loading models and running OCR...";
+  ui.status.textContent = "Loading models, checking the selected runtime, and running OCR...";
   ui.runButton.disabled = true;
 
+  const selectedProvider = ui.providerSelect.value as "auto" | ExecutionProvider;
   const ocr = createPPOcrV5({
     baseUrl: modelBaseUrl,
+    providerPreference: selectedProvider === "auto" ? "auto" : selectedProvider,
     warmup: true
   });
 
@@ -66,7 +141,10 @@ ui.runButton.addEventListener("click", async () => {
     const result = await ocr.ocr(file);
     ui.resultText.textContent = result.text || "(No text detected)";
     ui.resultRuntime.textContent = JSON.stringify(result.runtime, null, 2);
-    ui.status.textContent = `Done. Provider: ${result.runtime.provider}`;
+    ui.status.textContent =
+      selectedProvider === "auto"
+        ? `Done. Auto selected ${formatProviderLabel(result.runtime.provider)}.`
+        : `Done. Provider: ${formatProviderLabel(result.runtime.provider)}.`;
   } catch (error) {
     ui.status.textContent =
       error instanceof Error ? `OCR failed: ${error.message}` : "OCR failed with an unknown error.";

@@ -108,6 +108,11 @@ export class PaddleOcrWeb {
 
   private async selectProvider(): Promise<ExecutionProvider> {
     const candidates = getProviderCandidates(this.options.providerPreference);
+    const firstCandidate = candidates[0];
+    if (!firstCandidate) {
+      throw new Error("No ONNX Runtime execution providers are available.");
+    }
+
     const cacheKey = buildProviderCacheKey(this.options.manifest);
 
     if (this.options.benchmarkCache !== false) {
@@ -124,7 +129,7 @@ export class PaddleOcrWeb {
     }
 
     if (candidates.length === 1 || this.options.autoBenchmark === false) {
-      const provider = candidates[0];
+      const provider = firstCandidate;
       this.runtimeSelection = {
         provider,
         candidates,
@@ -135,7 +140,7 @@ export class PaddleOcrWeb {
     }
 
     const benchmarks: RuntimeBenchmark[] = [];
-    let bestProvider = candidates[0];
+    let bestProvider = firstCandidate;
     let bestLatency = Number.POSITIVE_INFINITY;
 
     for (const provider of candidates) {

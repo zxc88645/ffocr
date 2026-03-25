@@ -33,6 +33,14 @@
           <input id="image-input" type="file" accept="image/*" />
         </label>
 
+        <label class="field">
+          <span>Execution Provider</span>
+          <select id="provider-select"></select>
+          <small id="provider-note" class="field-note"></small>
+        </label>
+
+        <div id="provider-detected" class="provider-detected" aria-live="polite"></div>
+
         <button id="run-button" type="button">Run OCR</button>
         <p id="status" class="status">Select an image to begin.</p>
       </section>

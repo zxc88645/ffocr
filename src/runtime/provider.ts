@@ -1,23 +1,26 @@
 import type {
   ExecutionProvider,
+  ExecutionProviderSupport,
   PaddleOcrModelManifest,
   ProviderPreference,
   RuntimeBenchmark
 } from "../types";
 
 const STORAGE_PREFIX = "ffocr:provider:";
+const EXECUTION_PROVIDER_PRIORITY: readonly ExecutionProvider[] = [
+  "webgpu",
+  "webnn",
+  "webgl",
+  "wasm"
+];
 
 function normalizePreference(preference: ProviderPreference | undefined): ExecutionProvider[] {
   if (!preference || preference === "auto") {
-    const providers: ExecutionProvider[] = [];
-    if (supportsWebGpu()) {
-      providers.push("webgpu");
-    }
-    providers.push("wasm");
-    return providers;
+    const available = getAvailableExecutionProviders();
+    return available.length > 0 ? available : ["wasm"];
   }
 
-  if (preference === "webgpu" || preference === "wasm") {
+  if (typeof preference === "string") {
     return [preference];
   }
 
@@ -32,8 +35,68 @@ export function getProviderCandidates(
   );
 }
 
+export function getKnownExecutionProviders(): readonly ExecutionProvider[] {
+  return EXECUTION_PROVIDER_PRIORITY;
+}
+
+export function getExecutionProviderSupport(): readonly ExecutionProviderSupport[] {
+  return EXECUTION_PROVIDER_PRIORITY.map((provider) => ({
+    provider,
+    available: isExecutionProviderAvailable(provider)
+  }));
+}
+
+export function getAvailableExecutionProviders(): ExecutionProvider[] {
+  return getExecutionProviderSupport()
+    .filter((item) => item.available)
+    .map((item) => item.provider);
+}
+
+export function isExecutionProviderAvailable(provider: ExecutionProvider): boolean {
+  switch (provider) {
+    case "webgpu":
+      return supportsWebGpu();
+    case "webnn":
+      return supportsWebNN();
+    case "webgl":
+      return supportsWebGl();
+    case "wasm":
+      return supportsWasm();
+    default:
+      return false;
+  }
+}
+
 export function supportsWebGpu(): boolean {
   return typeof navigator !== "undefined" && "gpu" in navigator;
+}
+
+export function supportsWebNN(): boolean {
+  return typeof navigator !== "undefined" && "ml" in navigator;
+}
+
+export function supportsWebGl(): boolean {
+  const canvas = createProbeCanvas();
+  if (!canvas) {
+    return false;
+  }
+
+  try {
+    const standardContext = canvas.getContext("webgl2") || canvas.getContext("webgl");
+    if (standardContext) {
+      return true;
+    }
+
+    return typeof HTMLCanvasElement !== "undefined" && canvas instanceof HTMLCanvasElement
+      ? Boolean(canvas.getContext("experimental-webgl"))
+      : false;
+  } catch {
+    return false;
+  }
+}
+
+export function supportsWasm(): boolean {
+  return typeof WebAssembly !== "undefined";
 }
 
 export function buildProviderCacheKey(manifest: PaddleOcrModelManifest): string {
@@ -47,11 +110,15 @@ export function readCachedProvider(cacheKey: string): ExecutionProvider | null {
   }
 
   const cached = localStorage.getItem(cacheKey);
-  if (cached === "webgpu" || cached === "wasm") {
+  if (isExecutionProvider(cached)) {
     return cached;
   }
 
   return null;
+}
+
+function isExecutionProvider(value: string | null): value is ExecutionProvider {
+  return value !== null && getKnownExecutionProviders().includes(value as ExecutionProvider);
 }
 
 export function writeCachedProvider(
@@ -65,4 +132,19 @@ export function writeCachedProvider(
 
   localStorage.setItem(cacheKey, provider);
   localStorage.setItem(`${cacheKey}:benchmarks`, JSON.stringify(benchmarks));
+}
+
+function createProbeCanvas():
+  | HTMLCanvasElement
+  | OffscreenCanvas
+  | null {
+  if (typeof OffscreenCanvas !== "undefined") {
+    return new OffscreenCanvas(1, 1);
+  }
+
+  if (typeof document !== "undefined") {
+    return document.createElement("canvas");
+  }
+
+  return null;
 }

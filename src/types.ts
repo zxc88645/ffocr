@@ -1,4 +1,4 @@
-export type ExecutionProvider = "webgpu" | "wasm";
+export type ExecutionProvider = "webgpu" | "webnn" | "webgl" | "wasm";
 
 export type ProviderPreference =
   | "auto"
@@ -29,6 +29,11 @@ export interface PaddleOcrModelManifest {
 export interface OrtRuntimeOptions {
   wasmPaths?: string | Record<string, string>;
   wasmThreads?: number;
+}
+
+export interface ExecutionProviderSupport {
+  provider: ExecutionProvider;
+  available: boolean;
 }
 
 export interface CreatePaddleOcrOptions {
