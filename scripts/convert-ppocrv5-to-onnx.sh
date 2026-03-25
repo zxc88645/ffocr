@@ -8,8 +8,9 @@ OUTPUT_DIR="${OUTPUT_DIR:-${ROOT_DIR}/models/pp-ocrv5}"
 PADDLE_TMP_DIR="${WORK_DIR}/paddle"
 ONNX_TMP_DIR="${WORK_DIR}/onnx"
 
-DET_URL="${DET_URL:-https://paddleocr.bj.bcebos.com/PP-OCRv5/chinese/ch_PP-OCRv5_det_infer.tar}"
-REC_URL="${REC_URL:-https://paddleocr.bj.bcebos.com/PP-OCRv5/chinese/ch_PP-OCRv5_rec_infer.tar}"
+DET_REPO="${DET_REPO:-PaddlePaddle/PP-OCRv5_server_det}"
+REC_REPO="${REC_REPO:-PaddlePaddle/PP-OCRv5_server_rec}"
+HF_REVISION="${HF_REVISION:-main}"
 DICT_URL="${DICT_URL:-https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/ppocr_keys_v1.txt}"
 
 log() {
@@ -23,34 +24,28 @@ require_command() {
   fi
 }
 
-find_paddle_model_dir() {
-  local search_root="$1"
-  local pdmodel_path
+download_hf_file() {
+  local repo_id="$1"
+  local revision="$2"
+  local remote_path="$3"
+  local destination="$4"
+  local encoded_repo
 
-  pdmodel_path="$(find "${search_root}" -type f -name 'inference.pdmodel' -print -quit)"
-  if [[ -z "${pdmodel_path}" ]]; then
-    printf 'Unable to find inference.pdmodel under %s\n' "${search_root}" >&2
-    exit 1
-  fi
-
-  dirname "${pdmodel_path}"
+  encoded_repo="${repo_id/\//%2F}"
+  curl -L "https://huggingface.co/${repo_id}/resolve/${revision}/${remote_path}?download=true" -o "${destination}"
 }
 
-download_and_extract() {
-  local url="$1"
-  local target_name="$2"
-  local archive_path="${PADDLE_TMP_DIR}/${target_name}.tar"
-  local target_dir="${PADDLE_TMP_DIR}/${target_name}"
+download_hf_model() {
+  local repo_id="$1"
+  local target_dir="$2"
 
-  mkdir -p "${PADDLE_TMP_DIR}"
   rm -rf "${target_dir}"
-
-  log "Downloading ${target_name} model"
-  curl -L "$url" -o "${archive_path}"
-
-  log "Extracting ${target_name} model"
   mkdir -p "${target_dir}"
-  tar -xf "${archive_path}" -C "${target_dir}"
+
+  log "Downloading ${repo_id}"
+  download_hf_file "${repo_id}" "${HF_REVISION}" "inference.json" "${target_dir}/inference.json"
+  download_hf_file "${repo_id}" "${HF_REVISION}" "inference.pdiparams" "${target_dir}/inference.pdiparams"
+  download_hf_file "${repo_id}" "${HF_REVISION}" "inference.yml" "${target_dir}/inference.yml"
 }
 
 convert_to_onnx() {
@@ -60,7 +55,7 @@ convert_to_onnx() {
   mkdir -p "${output_dir}"
 
   log "Converting $(basename "$source_dir") to ONNX"
-  paddlex \
+  PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True paddlex \
     --paddle2onnx \
     --paddle_model_dir "${source_dir}" \
     --onnx_model_dir "${output_dir}" \
@@ -72,7 +67,7 @@ copy_model_file() {
   local output_file="$2"
   local model_file
 
-  model_file="$(find "${source_dir}" -type f \( -name '*.onnx' -o -name 'model.onnx' \) | head -n 1)"
+  model_file="$(find "${source_dir}" -type f -name '*.onnx' | head -n 1)"
   if [[ -z "${model_file}" ]]; then
     printf 'Unable to find ONNX file in %s\n' "${source_dir}" >&2
     exit 1
@@ -83,24 +78,19 @@ copy_model_file() {
 
 main() {
   require_command curl
-  require_command tar
   require_command find
-  require_command dirname
   require_command paddlex
 
-  mkdir -p "${OUTPUT_DIR}" "${ONNX_TMP_DIR}"
+  mkdir -p "${OUTPUT_DIR}" "${ONNX_TMP_DIR}" "${PADDLE_TMP_DIR}"
 
   log "Installing Paddle2ONNX plugin if needed"
-  paddlex --install paddle2onnx
+  PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True paddlex --install paddle2onnx
 
-  download_and_extract "${DET_URL}" "det"
-  download_and_extract "${REC_URL}" "rec"
+  download_hf_model "${DET_REPO}" "${PADDLE_TMP_DIR}/det"
+  download_hf_model "${REC_REPO}" "${PADDLE_TMP_DIR}/rec"
 
-  DET_MODEL_DIR="$(find_paddle_model_dir "${PADDLE_TMP_DIR}/det")"
-  REC_MODEL_DIR="$(find_paddle_model_dir "${PADDLE_TMP_DIR}/rec")"
-
-  convert_to_onnx "${DET_MODEL_DIR}" "${ONNX_TMP_DIR}/det"
-  convert_to_onnx "${REC_MODEL_DIR}" "${ONNX_TMP_DIR}/rec"
+  convert_to_onnx "${PADDLE_TMP_DIR}/det" "${ONNX_TMP_DIR}/det"
+  convert_to_onnx "${PADDLE_TMP_DIR}/rec" "${ONNX_TMP_DIR}/rec"
 
   copy_model_file "${ONNX_TMP_DIR}/det" "${OUTPUT_DIR}/det.onnx"
   copy_model_file "${ONNX_TMP_DIR}/rec" "${OUTPUT_DIR}/rec.onnx"

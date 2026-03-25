@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ffocr model hosting</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(255, 214, 10, 0.22), transparent 36%),
+          linear-gradient(180deg, #f7f1e6 0%, #efe6d5 100%);
+        color: #1d1b16;
+      }
+
+      main {
+        width: min(760px, calc(100vw - 32px));
+        padding: 32px;
+        border: 1px solid rgba(29, 27, 22, 0.08);
+        border-radius: 24px;
+        background: rgba(255, 252, 245, 0.92);
+        box-shadow: 0 20px 60px rgba(29, 27, 22, 0.12);
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: clamp(2rem, 4vw, 3rem);
+      }
+
+      p {
+        line-height: 1.6;
+      }
+
+      code {
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: #efe7d8;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>ffocr model hosting</h1>
+      <p>This GitHub Pages site hosts static model files for the <code>ffocr</code> package.</p>
+      <p>Expected model base URL:</p>
+      <p><code>/models/pp-ocrv5</code></p>
+    </main>
+  </body>
+</html>

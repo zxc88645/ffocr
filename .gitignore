@@ -1,6 +1,7 @@
 node_modules
+.venv
 dist
 .npm-cache
 .model-work
-models
+/models
 .DS_Store
