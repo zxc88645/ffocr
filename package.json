@@ -1,0 +1,53 @@
+{
+  "name": "ffocr",
+  "version": "0.1.0",
+  "description": "Browser-first PaddleOCR wrapper powered by ONNX Runtime Web with automatic WebGPU/WASM selection.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "check": "tsc --noEmit",
+    "models:convert": "scripts/convert-ppocrv5-to-onnx.sh",
+    "prepublishOnly": "npm run build && npm run check"
+  },
+  "keywords": [
+    "ocr",
+    "paddleocr",
+    "onnx",
+    "onnxruntime",
+    "webgpu",
+    "browser",
+    "frontend"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zxc88645/ffocr.git"
+  },
+  "homepage": "https://github.com/zxc88645/ffocr#readme",
+  "bugs": {
+    "url": "https://github.com/zxc88645/ffocr/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "onnxruntime-web": "^1.22.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.8.3"
+  }
+}
