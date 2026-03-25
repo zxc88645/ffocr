@@ -1,0 +1,177 @@
+:root {
+  color-scheme: light;
+  --bg: #f4efe7;
+  --panel: rgba(255, 250, 243, 0.88);
+  --ink: #1f1d1a;
+  --muted: #6d645a;
+  --accent: #c75b39;
+  --accent-strong: #9f3b1d;
+  --border: rgba(31, 29, 26, 0.12);
+  --shadow: 0 24px 70px rgba(70, 40, 20, 0.12);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(199, 91, 57, 0.2), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(89, 139, 122, 0.18), transparent 24%),
+    linear-gradient(180deg, #f8f4ee 0%, var(--bg) 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+.app {
+  width: min(1100px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+  display: grid;
+  gap: 18px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.hero {
+  padding: 32px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-family: "IBM Plex Serif", Georgia, serif;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 3.8rem);
+  line-height: 0.98;
+  max-width: 14ch;
+}
+
+h2 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+.lead {
+  max-width: 60ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+.controls,
+.result-panel {
+  padding: 24px;
+}
+
+.controls {
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  font-weight: 600;
+}
+
+input,
+button,
+pre {
+  font: inherit;
+}
+
+input[type="text"],
+input[type="file"] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+button {
+  width: fit-content;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.status {
+  margin: 0;
+  color: var(--muted);
+}
+
+.preview-panel {
+  min-height: 240px;
+  padding: 18px;
+  display: grid;
+  place-items: center;
+}
+
+#preview {
+  max-width: 100%;
+  max-height: 420px;
+  border-radius: 18px;
+}
+
+pre {
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(31, 29, 26, 0.92);
+  color: #f8f1e6;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.result-panel {
+  display: grid;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .app {
+    width: min(100vw - 20px, 1100px);
+    padding: 20px 0 40px;
+  }
+
+  .hero,
+  .controls,
+  .result-panel {
+    padding: 20px;
+  }
+}

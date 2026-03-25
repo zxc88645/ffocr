@@ -40,6 +40,13 @@ export interface CreatePaddleOcrOptions {
   ort?: OrtRuntimeOptions;
 }
 
+export interface CreatePPOcrV5Options extends Omit<CreatePaddleOcrOptions, "manifest"> {
+  baseUrl: string;
+  dictionaryUrl?: string;
+  detectionModelPath?: string;
+  recognitionModelPath?: string;
+}
+
 export interface Point {
   x: number;
   y: number;

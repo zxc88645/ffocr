@@ -1,38 +1,62 @@
 # `ffocr`
 
-Browser-first PaddleOCR wrapper for pure frontend apps. It runs PaddleOCR models converted to ONNX with `onnxruntime-web`, prefers WebGPU when available, and falls back to WASM automatically.
+Browser-first OCR for frontend apps, built on PaddleOCR models converted to ONNX and executed with `onnxruntime-web`.
 
 GitHub: <https://github.com/zxc88645/ffocr>
 
-## Why this package
-
-- Latest PaddleOCR is now on the 3.x line, with PP-OCRv5 as the main OCR model family.
-- Official PaddleOCR supports ONNX export through Paddle2ONNX, which makes browser deployment practical.
-- For modern browsers, `onnxruntime-web` is the most durable frontend runtime path: WebGPU for fast local inference, WASM as the universal fallback.
-
-This package wraps that stack into one browser API:
-
-- `createPaddleOcr()` for setup
-- automatic `webgpu -> wasm` runtime selection
-- optional runtime benchmarking and cache
-- detection + recognition pipeline for browser images
-
-## Important scope
-
-This package intentionally does **not** bundle model weights into npm. PaddleOCR models are large, and the browser-ready setup is usually:
-
-1. Download official PaddleOCR inference models
-2. Convert them to ONNX outside the browser
-3. Upload `det.onnx` and `rec.onnx` to your own CDN, GitHub Releases, or Hugging Face
-4. Point this package at those URLs
-
-## Install
+## Quick start
 
 ```bash
-npm install ffocr onnxruntime-web
+npm install ffocr
 ```
 
-## Usage
+```ts
+import { createPPOcrV5 } from "ffocr";
+
+const ocr = createPPOcrV5({
+  baseUrl: "https://your-cdn.example.com/models/pp-ocrv5"
+});
+
+const result = await ocr.ocr(fileOrBlobOrUrl);
+console.log(result.text);
+```
+
+## Why this package
+
+- Uses the current PaddleOCR 3.x / PP-OCRv5 direction
+- Runs fully in the browser
+- Prefers `webgpu`, falls back to `wasm`
+- Wraps detection + recognition into one simple API
+- Lets you host model files separately instead of bloating npm
+
+## Easiest API
+
+For most users, this is the main entry point:
+
+```ts
+import { createPPOcrV5, ocrWithPPOcrV5 } from "ffocr";
+
+const reusable = createPPOcrV5({
+  baseUrl: "https://your-cdn.example.com/models/pp-ocrv5",
+  warmup: true
+});
+
+const result = await reusable.ocr(file);
+
+const oneShot = await ocrWithPPOcrV5(file, {
+  baseUrl: "https://your-cdn.example.com/models/pp-ocrv5"
+});
+```
+
+`createPPOcrV5()` automatically supplies:
+
+- the PP-OCRv5 browser manifest
+- the default PaddleOCR dictionary URL
+- a recommended ONNX Runtime WASM asset path
+
+## Lower-level API
+
+If you need full control, you can build the manifest yourself:
 
 ```ts
 import { createPaddleOcr, createPPOcrV5BrowserManifest } from "ffocr";
@@ -46,59 +70,15 @@ const ocr = createPaddleOcr({
   providerPreference: "auto",
   autoBenchmark: true,
   benchmarkCache: true,
-  warmup: true,
-  ort: {
-    wasmPaths: "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/"
-  }
+  warmup: true
 });
 
-await ocr.init();
-
 const result = await ocr.ocr("https://example.com/demo.png");
-console.log(result.runtime.provider);
-console.log(result.text);
 ```
 
-## Runtime strategy
+## Inputs
 
-`providerPreference: "auto"` behaves like this:
-
-- If WebGPU is available, benchmark `webgpu` and `wasm`
-- Cache the faster provider by browser/user agent
-- Reuse the cached provider on the next run
-- Fall back to `wasm` if WebGPU is unavailable or fails
-
-That is the right default for Apple Silicon devices such as MacBook Pro M3 in Chromium-based browsers, where WebGPU typically wins. Safari support is still less predictable for this stack, so the WASM fallback remains essential.
-
-## Model conversion flow
-
-Use the official PaddleOCR inference models as your source, then convert them with Paddle2ONNX.
-
-Official references:
-
-- PaddleOCR repo: <https://github.com/PaddlePaddle/PaddleOCR>
-- Paddle2ONNX doc: <https://www.paddleocr.ai/main/en/version2.x/legacy/paddle2onnx.html>
-- ONNX Runtime Web doc: <https://onnxruntime.ai/docs/get-started/with-javascript/web.html>
-
-The helper `officialPaddleOcrSources` includes the official PP-OCRv5 Paddle-format download URLs and the standard dictionary URL.
-
-## API
-
-### `createPaddleOcr(options)`
-
-Creates a reusable OCR instance.
-
-### `createPPOcrV5BrowserManifest({ baseUrl })`
-
-Returns a manifest that expects:
-
-- `${baseUrl}/det.onnx`
-- `${baseUrl}/rec.onnx`
-- the default dictionary from the official PaddleOCR repository
-
-### `ocr.ocr(source)`
-
-Accepts:
+`ocr.ocr(source)` accepts:
 
 - `ImageData`
 - `ImageBitmap`
@@ -108,51 +88,75 @@ Accepts:
 - `Blob`
 - `string` URL
 
-Returns line-level OCR results and the selected runtime provider.
+## Runtime selection
 
-## Publishing checklist
+With `providerPreference: "auto"`:
 
-1. Decide the final npm package name in [package.json](/Users/cfh00911141/git/ffocr/package.json).
-2. Build and test locally:
-   ```bash
-   npm install
-   npm run build
-   npm run check
-   ```
-3. Login to npm:
-   ```bash
-   npm login
-   ```
-4. Publish:
-   ```bash
-   npm publish --access public
-   ```
+- `webgpu` is tried when available
+- `webgpu` and `wasm` can be benchmarked
+- the faster provider can be cached by browser/user agent
+- `wasm` remains the fallback
 
-If you want GitHub to publish for you, add an `NPM_TOKEN` repository secret and use the workflow in [.github/workflows/publish.yml](/Users/cfh00911141/git/ffocr/.github/workflows/publish.yml).
+That is a good default for Apple Silicon devices such as Mac M3 machines in Chromium-based browsers.
 
-## Model preparation
+## Model files
 
-Use [scripts/convert-ppocrv5-to-onnx.sh](/Users/cfh00911141/git/ffocr/scripts/convert-ppocrv5-to-onnx.sh) to download the official PP-OCRv5 Paddle inference models and convert them into browser-ready ONNX files:
+This package does not ship model weights inside npm. You prepare and host:
+
+- `det.onnx`
+- `rec.onnx`
+- `ppocr_keys_v1.txt`
+
+Then point `baseUrl` to that folder.
+
+## Convert PP-OCRv5 to ONNX
+
+Use the included script:
 
 ```bash
 ./scripts/convert-ppocrv5-to-onnx.sh
 ```
 
-That script writes:
+Output:
 
 - `models/pp-ocrv5/det.onnx`
 - `models/pp-ocrv5/rec.onnx`
 - `models/pp-ocrv5/ppocr_keys_v1.txt`
 
-Then you can upload `models/pp-ocrv5/` to GitHub Releases, a CDN, or object storage and point `createPPOcrV5BrowserManifest({ baseUrl })` at that URL.
-
-More details:
+Docs:
 
 - [Model conversion guide](/Users/cfh00911141/git/ffocr/docs/MODEL_CONVERSION.md)
 - [First release guide](/Users/cfh00911141/git/ffocr/docs/RELEASE.md)
 
+## Demo app
+
+A runnable example app is included in [examples/vite-demo](/Users/cfh00911141/git/ffocr/examples/vite-demo/README.md).
+
+Typical local flow:
+
+1. Convert the model with `./scripts/convert-ppocrv5-to-onnx.sh`
+2. Serve `models/pp-ocrv5/` from a local static server
+3. Run the demo:
+   ```bash
+   cd examples/vite-demo
+   npm install
+   npm run dev
+   ```
+
+## Publish package
+
+```bash
+npm install
+npm run build
+npm run check
+npm pack --dry-run --cache .npm-cache
+npm publish --access public
+```
+
+If you want GitHub Actions publishing, configure `NPM_TOKEN` and use [publish.yml](/Users/cfh00911141/git/ffocr/.github/workflows/publish.yml).
+
 ## Current limitations
 
-- The browser detector here uses a lightweight axis-aligned DB-style postprocess, not the full OpenCV/pyclipper polygon pipeline from Python PaddleOCR.
-- For heavily rotated text, curved text, or production-grade multilingual layout parsing, you may want a second package later with a more exact polygon postprocess or worker-based execution.
-- This package is browser-focused. It is not designed for Node.js server OCR.
+- Detection postprocess is a browser-friendly axis-aligned DB-style implementation, not the full Python PaddleOCR polygon pipeline
+- Heavily rotated or curved text can need a more exact postprocess later
+- This package is browser-focused, not a server OCR library

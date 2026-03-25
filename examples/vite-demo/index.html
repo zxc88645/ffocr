@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ffocr Demo</title>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel hero">
+        <p class="eyebrow">ffocr</p>
+        <h1>Browser OCR with PaddleOCR + ONNX Runtime Web</h1>
+        <p class="lead">
+          Pick an image, point to your hosted PP-OCRv5 ONNX files, and run OCR directly in the
+          browser.
+        </p>
+      </section>
+
+      <section class="panel controls">
+        <label class="field">
+          <span>Model Base URL</span>
+          <input
+            id="model-base-url"
+            type="text"
+            value="http://localhost:8080/models/pp-ocrv5"
+            spellcheck="false"
+          />
+        </label>
+
+        <label class="field">
+          <span>Image File</span>
+          <input id="image-input" type="file" accept="image/*" />
+        </label>
+
+        <button id="run-button" type="button">Run OCR</button>
+        <p id="status" class="status">Select an image to begin.</p>
+      </section>
+
+      <section class="panel preview-panel">
+        <img id="preview" alt="Selected preview" />
+      </section>
+
+      <section class="panel result-panel">
+        <h2>Detected Text</h2>
+        <pre id="result-text"></pre>
+        <h2>Runtime</h2>
+        <pre id="result-runtime"></pre>
+      </section>
+    </main>
+  </body>
+</html>
