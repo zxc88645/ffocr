@@ -65,6 +65,8 @@ A model base URL must point to a folder containing:
 
 The default hosted model URL only works after those files have been uploaded to the GitHub Release described in [`docs/MODEL_RELEASES.md`](./docs/MODEL_RELEASES.md).
 
+The bundled conversion flow patches the generated ONNX files so the default PP-OCRv5 models stay compatible with ONNX Runtime WebGPU.
+
 ## Supported inputs
 
 - `ImageData`

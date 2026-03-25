@@ -95,6 +95,11 @@ main() {
   copy_model_file "${ONNX_TMP_DIR}/det" "${OUTPUT_DIR}/det.onnx"
   copy_model_file "${ONNX_TMP_DIR}/rec" "${OUTPUT_DIR}/rec.onnx"
 
+  log "Patching ONNX models for ONNX Runtime WebGPU compatibility"
+  node "${ROOT_DIR}/scripts/patch-onnx-webgpu-compat.mjs" \
+    "${OUTPUT_DIR}/det.onnx" \
+    "${OUTPUT_DIR}/rec.onnx"
+
   log "Downloading dictionary"
   curl -L "${DICT_URL}" -o "${OUTPUT_DIR}/ppocr_keys_v1.txt"
 

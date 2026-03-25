@@ -16,6 +16,8 @@ You also need `curl` and `tar`.
 ./scripts/convert-ppocrv5-to-onnx.sh
 ```
 
+The conversion script also applies a small post-processing patch so the exported PP-OCRv5 detection model stays compatible with ONNX Runtime WebGPU.
+
 Output:
 
 ```text
