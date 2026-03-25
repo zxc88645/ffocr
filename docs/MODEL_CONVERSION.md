@@ -1,44 +1,22 @@
-# PP-OCRv5 to ONNX
+# Model Conversion
 
-This project uses the official PaddleOCR PP-OCRv5 Paddle inference models as the source format, then converts them to ONNX for browser inference.
-
-## Official references
-
-- PaddleOCR repository: <https://github.com/PaddlePaddle/PaddleOCR>
-- PaddleOCR ONNX conversion doc: <https://www.paddleocr.ai/v3.0.0/en/version3.x/deployment/obtaining_onnx_models.html>
-- ONNX Runtime Web doc: <https://onnxruntime.ai/docs/get-started/with-javascript/web.html>
+Convert official PP-OCRv5 Paddle inference models into ONNX files for browser use.
 
 ## Prerequisites
-
-You need a machine with:
-
-- `python3`
-- `pip`
-- `curl`
-- `tar`
-
-Install PaddleX first. The script expects the `paddlex` CLI to be available:
 
 ```bash
 python3 -m pip install -U paddlex
 ```
 
-## Convert models
+You also need `curl` and `tar`.
 
-From the repo root:
+## Convert
 
 ```bash
 ./scripts/convert-ppocrv5-to-onnx.sh
 ```
 
-The script will:
-
-1. Install the Paddle2ONNX plugin through `paddlex --install paddle2onnx`
-2. Download the official PP-OCRv5 detection and recognition Paddle inference archives
-3. Convert them to ONNX
-4. Write browser-facing files into `models/pp-ocrv5/`
-
-Expected output:
+Output:
 
 ```text
 models/pp-ocrv5/
@@ -47,55 +25,10 @@ models/pp-ocrv5/
 └── ppocr_keys_v1.txt
 ```
 
-## Override sources
-
-You can override URLs or output paths with environment variables:
+## Optional Pages hosting
 
 ```bash
-OUTPUT_DIR=/tmp/ppocr-web \
-DET_URL=https://.../custom_det.tar \
-REC_URL=https://.../custom_rec.tar \
-./scripts/convert-ppocrv5-to-onnx.sh
+npm run models:stage:pages
 ```
 
-Supported variables:
-
-- `WORK_DIR`
-- `OUTPUT_DIR`
-- `DET_URL`
-- `REC_URL`
-- `DICT_URL`
-
-## Publish model assets
-
-After conversion, upload `models/pp-ocrv5/` to one of these:
-
-- GitHub Releases
-- Cloudflare R2
-- AWS S3
-- Hugging Face
-- any static CDN
-
-Then use that base URL in `createPPOcrV5BrowserManifest({ baseUrl })`.
-
-## Minimal GitHub Pages hosting
-
-This repo includes the smallest built-in hosting path:
-
-1. Convert the models locally
-2. Stage them for Pages:
-   ```bash
-   npm run models:stage:pages
-   ```
-3. Commit the files under `site/models/pp-ocrv5/`
-4. Push `main`
-
-The workflow in [.github/workflows/deploy-pages.yml](/Users/cfh00911141/git/ffocr/.github/workflows/deploy-pages.yml) will deploy the `site/` folder to GitHub Pages.
-
-If GitHub Pages is not enabled yet for the repository, set Pages to use GitHub Actions in repository settings first.
-
-Expected public base URL:
-
-```text
-https://zxc88645.github.io/ffocr/models/pp-ocrv5
-```
+That copies the files into `site/models/pp-ocrv5/` for GitHub Pages deployment.
