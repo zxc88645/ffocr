@@ -2,7 +2,8 @@ import "./style.css";
 import {
   createPPOcrV5,
   getExecutionProviderSupport,
-  type ExecutionProvider
+  type ExecutionProvider,
+  type OcrResult
 } from "ffocr";
 
 const imageInput = document.querySelector<HTMLInputElement>("#image-input");
@@ -12,9 +13,11 @@ const providerNote = document.querySelector<HTMLElement>("#provider-note");
 const providerDetected = document.querySelector<HTMLElement>("#provider-detected");
 const runButton = document.querySelector<HTMLButtonElement>("#run-button");
 const preview = document.querySelector<HTMLImageElement>("#preview");
+const previewOverlay = document.querySelector<SVGSVGElement>("#preview-overlay");
 const status = document.querySelector<HTMLElement>("#status");
 const resultText = document.querySelector<HTMLElement>("#result-text");
 const resultRuntime = document.querySelector<HTMLElement>("#result-runtime");
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 function assertElement<T>(value: T | null, label: string): T {
   if (!value) {
@@ -32,6 +35,7 @@ const ui = {
   providerDetected: assertElement(providerDetected, "#provider-detected"),
   runButton: assertElement(runButton, "#run-button"),
   preview: assertElement(preview, "#preview"),
+  previewOverlay: assertElement(previewOverlay, "#preview-overlay"),
   status: assertElement(status, "#status"),
   resultText: assertElement(resultText, "#result-text"),
   resultRuntime: assertElement(resultRuntime, "#result-runtime")
@@ -107,8 +111,66 @@ function updateProviderUi(): void {
   }
 }
 
+function clearOverlay(): void {
+  ui.previewOverlay.replaceChildren();
+  ui.previewOverlay.removeAttribute("viewBox");
+  ui.previewOverlay.classList.add("is-empty");
+}
+
+function createSvgElement<K extends keyof SVGElementTagNameMap>(
+  tagName: K
+): SVGElementTagNameMap[K] {
+  return document.createElementNS(SVG_NS, tagName);
+}
+
+function renderOverlay(result: OcrResult): void {
+  clearOverlay();
+  ui.previewOverlay.setAttribute("viewBox", `0 0 ${result.image.width} ${result.image.height}`);
+  ui.previewOverlay.classList.remove("is-empty");
+
+  result.lines.forEach((line, index) => {
+    const [topLeft] = line.box.points;
+    const points = line.box.points.map((point) => `${point.x},${point.y}`).join(" ");
+    const label = `${index + 1}. ${line.text || "(blank)"}`;
+    const labelWidth = Math.min(
+      result.image.width - topLeft.x,
+      Math.max(54, label.length * 7.2)
+    );
+    const labelHeight = 18;
+    const labelX = Math.max(0, Math.min(topLeft.x, result.image.width - labelWidth));
+    const labelY = Math.max(0, topLeft.y - labelHeight - 4);
+
+    const polygon = createSvgElement("polygon");
+    polygon.setAttribute("points", points);
+    polygon.setAttribute("class", "ocr-box");
+
+    const labelBackground = createSvgElement("rect");
+    labelBackground.setAttribute("x", `${labelX}`);
+    labelBackground.setAttribute("y", `${labelY}`);
+    labelBackground.setAttribute("width", `${labelWidth}`);
+    labelBackground.setAttribute("height", `${labelHeight}`);
+    labelBackground.setAttribute("rx", "5");
+    labelBackground.setAttribute("class", "ocr-label-bg");
+
+    const text = createSvgElement("text");
+    text.setAttribute("x", `${labelX + 6}`);
+    text.setAttribute("y", `${labelY + 12.5}`);
+    text.setAttribute("class", "ocr-label");
+    text.textContent = label;
+
+    ui.previewOverlay.append(polygon, labelBackground, text);
+  });
+}
+
 ui.modelBaseUrlInput.value = getDefaultModelBaseUrl();
 updateProviderUi();
+clearOverlay();
+
+ui.imageInput.addEventListener("change", () => {
+  clearOverlay();
+  ui.resultText.textContent = "";
+  ui.resultRuntime.textContent = "";
+});
 
 ui.runButton.addEventListener("click", async () => {
   const file = ui.imageInput.files?.[0];
@@ -125,6 +187,7 @@ ui.runButton.addEventListener("click", async () => {
 
   const objectUrl = URL.createObjectURL(file);
   ui.preview.src = objectUrl;
+  clearOverlay();
   ui.resultText.textContent = "";
   ui.resultRuntime.textContent = "";
   ui.status.textContent = "Loading models, checking the selected runtime, and running OCR...";
@@ -141,11 +204,13 @@ ui.runButton.addEventListener("click", async () => {
     const result = await ocr.ocr(file);
     ui.resultText.textContent = result.text || "(No text detected)";
     ui.resultRuntime.textContent = JSON.stringify(result.runtime, null, 2);
+    renderOverlay(result);
     ui.status.textContent =
       selectedProvider === "auto"
         ? `Done. Auto selected ${formatProviderLabel(result.runtime.provider)}.`
         : `Done. Provider: ${formatProviderLabel(result.runtime.provider)}.`;
   } catch (error) {
+    clearOverlay();
     ui.status.textContent =
       error instanceof Error ? `OCR failed: ${error.message}` : "OCR failed with an unknown error.";
   } finally {

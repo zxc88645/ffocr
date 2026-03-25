@@ -177,10 +177,51 @@ button:disabled {
   place-items: center;
 }
 
+.preview-stage {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  display: inline-block;
+}
+
 #preview {
+  display: block;
   max-width: 100%;
   max-height: 420px;
   border-radius: 18px;
+}
+
+.preview-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.preview-overlay.is-empty {
+  display: none;
+}
+
+.ocr-box {
+  fill: rgba(199, 91, 57, 0.12);
+  stroke: rgba(199, 91, 57, 0.95);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.ocr-label-bg {
+  fill: rgba(31, 29, 26, 0.82);
+}
+
+.ocr-label {
+  fill: #fff8f0;
+  font-size: 12px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: rgba(31, 29, 26, 0.55);
+  stroke-width: 2;
+  stroke-linejoin: round;
 }
 
 pre {

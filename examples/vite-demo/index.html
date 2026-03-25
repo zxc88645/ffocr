@@ -46,7 +46,15 @@
       </section>
 
       <section class="panel preview-panel">
-        <img id="preview" alt="Selected preview" />
+        <div class="preview-stage">
+          <img id="preview" alt="Selected preview" />
+          <svg
+            id="preview-overlay"
+            class="preview-overlay"
+            aria-label="OCR bounding boxes"
+            preserveAspectRatio="none"
+          ></svg>
+        </div>
       </section>
 
       <section class="panel result-panel">
