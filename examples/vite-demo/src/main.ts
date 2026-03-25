@@ -69,7 +69,7 @@ function updateProviderUi(): void {
   autoOption.value = "auto";
   autoOption.textContent =
     available.length > 1
-      ? "Auto (benchmark fastest)"
+      ? `Auto (${formatProviderLabel(available[0]?.provider ?? "wasm")} first)`
       : `Auto (${formatProviderLabel(available[0]?.provider ?? "wasm")})`;
   ui.providerSelect.append(autoOption);
 
@@ -83,7 +83,7 @@ function updateProviderUi(): void {
   ui.providerSelect.value = "auto";
   ui.providerNote.textContent =
     available.length > 1
-      ? "Auto will benchmark the detected providers and pick the fastest one."
+      ? "Auto uses the first available provider in priority order: WebGPU, WebNN, WebGL, then WASM."
       : "Only one provider is available in this browser, so auto and manual selection will use the same runtime.";
 
   ui.providerDetected.replaceChildren(

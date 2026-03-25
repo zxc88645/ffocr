@@ -7,17 +7,11 @@ import type {
   OcrLine,
   OcrOptions,
   OcrResult,
-  RuntimeBenchmark,
   RuntimeSelection
 } from "./types";
 import { cropImageData, ensureImageData } from "./io/canvas";
 import { createSession, configureOrt, runSession, type OrtSession } from "./runtime/ort";
-import {
-  buildProviderCacheKey,
-  getProviderCandidates,
-  readCachedProvider,
-  writeCachedProvider
-} from "./runtime/provider";
+import { getProviderCandidates } from "./runtime/provider";
 import { postprocessDetection } from "./pipeline/detect";
 import { preprocessDetection, preprocessRecognition } from "./pipeline/preprocess";
 import { decodeRecognitionOutput } from "./pipeline/recognize";
@@ -113,67 +107,14 @@ export class PaddleOcrWeb {
       throw new Error("No ONNX Runtime execution providers are available.");
     }
 
-    const cacheKey = buildProviderCacheKey(this.options.manifest);
-
-    if (this.options.benchmarkCache !== false) {
-      const cached = readCachedProvider(cacheKey);
-      if (cached && candidates.includes(cached)) {
-        this.runtimeSelection = {
-          provider: cached,
-          candidates,
-          benchmarked: true,
-          benchmarks: []
-        };
-        return cached;
-      }
-    }
-
-    if (candidates.length === 1 || this.options.autoBenchmark === false) {
-      const provider = firstCandidate;
-      this.runtimeSelection = {
-        provider,
-        candidates,
-        benchmarked: false,
-        benchmarks: []
-      };
-      return provider;
-    }
-
-    const benchmarks: RuntimeBenchmark[] = [];
-    let bestProvider = firstCandidate;
-    let bestLatency = Number.POSITIVE_INFINITY;
-
-    for (const provider of candidates) {
-      try {
-        const session = await createSession(this.options.manifest.detection.url, provider);
-        const tensor = createBlankTensor(640, 640);
-        await runSession(session, tensor, [1, 3, 640, 640], this.options.manifest.detection.inputName);
-        const start = now();
-        await runSession(session, tensor, [1, 3, 640, 640], this.options.manifest.detection.inputName);
-        const latencyMs = now() - start;
-        benchmarks.push({ provider, latencyMs });
-
-        if (latencyMs < bestLatency) {
-          bestLatency = latencyMs;
-          bestProvider = provider;
-        }
-      } catch {
-        continue;
-      }
-    }
-
     this.runtimeSelection = {
-      provider: bestProvider,
+      provider: firstCandidate,
       candidates,
-      benchmarked: benchmarks.length > 0,
-      benchmarks
+      benchmarked: false,
+      benchmarks: []
     };
 
-    if (this.options.benchmarkCache !== false && benchmarks.length > 0) {
-      writeCachedProvider(cacheKey, bestProvider, benchmarks);
-    }
-
-    return bestProvider;
+    return firstCandidate;
   }
 
   async warmup(): Promise<void> {

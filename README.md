@@ -78,8 +78,7 @@ The default hosted model URL only works after those files have been uploaded to 
 ## Runtime
 
 - Detects available ONNX Runtime Web execution providers including `webgpu`, `webnn`, `webgl`, and `wasm`
-- In `auto` mode, benchmarks available providers and picks the fastest one
-- Can cache the faster provider per browser
+- In `auto` mode, picks the first available provider in this order: `webgpu` -> `webnn` -> `webgl` -> `wasm`
 
 ## Extra docs
 
