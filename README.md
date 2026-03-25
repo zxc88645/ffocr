@@ -170,11 +170,11 @@ npm install
 npm run build
 npm run check
 npm pack --dry-run --cache .npm-cache
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
-With `NPM_TOKEN` configured in GitHub Actions secrets, pushing a `v*` tag will publish to npm automatically and create a GitHub Release automatically.
+With npm trusted publishing configured for this repository through OIDC, pushing a `v*` tag will publish to npm automatically and create a GitHub Release automatically.
 
 ## Current limitations
 

@@ -32,13 +32,16 @@ git push -u origin main
 
 ## 4. Configure automated publishing
 
-Add an `NPM_TOKEN` repository secret in GitHub:
+Set up npm trusted publishing with GitHub Actions using OIDC:
 
-1. Open repository settings
-2. Go to `Secrets and variables` -> `Actions`
-3. Create a repository secret named `NPM_TOKEN`
+1. Open the package settings on npm
+2. Add a trusted publisher
+3. Choose `GitHub Actions`
+4. Set user to `zxc88645`
+5. Set repository to `ffocr`
+6. Set workflow filename to `publish.yml`
 
-Once that secret exists, pushing a version tag will publish to npm automatically and create a GitHub Release automatically.
+Once that trust is configured, pushing a version tag will publish to npm automatically and create a GitHub Release automatically.
 
 ## 5. Publish to npm manually if needed
 
@@ -53,8 +56,8 @@ npm publish --access public
 ## 6. Trigger automatic publish by tag push
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 The workflow in [.github/workflows/publish.yml](/Users/cfh00911141/git/ffocr/.github/workflows/publish.yml) will build the package, publish it to npm, and create the GitHub Release from that tag.
