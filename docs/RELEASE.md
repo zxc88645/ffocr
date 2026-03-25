@@ -43,7 +43,30 @@ Set up npm trusted publishing with GitHub Actions using OIDC:
 
 Once that trust is configured, pushing a version tag will publish to npm automatically and create a GitHub Release automatically.
 
-## 5. Publish to npm manually if needed
+## 5. First publish must be manual
+
+If `ffocr` does not exist on npm yet, publish the current version from your local machine once first. npm trusted publishing only works after the package already exists in the registry.
+
+```bash
+npm whoami
+npm login
+npm publish --access public
+```
+
+After that succeeds, future releases can use tag push automation.
+
+## 6. Trigger automatic publish by tag push
+
+After the first manual publish, bump to the next version and push a tag. For example, after publishing `0.1.2` manually, the next automated release would be:
+
+```bash
+git tag v0.1.3
+git push origin v0.1.3
+```
+
+The workflow in [.github/workflows/publish.yml](/Users/cfh00911141/git/ffocr/.github/workflows/publish.yml) will build the package, publish it to npm, and create the GitHub Release from that tag.
+
+## 7. Publish to npm manually if needed
 
 Make sure you are logged into the correct npm account:
 
@@ -53,16 +76,7 @@ npm login
 npm publish --access public
 ```
 
-## 6. Trigger automatic publish by tag push
-
-```bash
-git tag v0.1.1
-git push origin v0.1.1
-```
-
-The workflow in [.github/workflows/publish.yml](/Users/cfh00911141/git/ffocr/.github/workflows/publish.yml) will build the package, publish it to npm, and create the GitHub Release from that tag.
-
-## 7. GitHub Pages model URL
+## 8. GitHub Pages model URL
 
 If you use the built-in Pages hosting flow, your model base URL will be:
 
