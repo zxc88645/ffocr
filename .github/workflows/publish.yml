@@ -21,6 +21,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate tag matches package version
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+
+          if [ "${TAG_NAME}" != "${PACKAGE_VERSION}" ]; then
+            echo "Tag version ${TAG_NAME} does not match package.json version ${PACKAGE_VERSION}" >&2
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

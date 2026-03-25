@@ -1,0 +1,38 @@
+name: Model Release
+
+on:
+  push:
+    tags:
+      - "models-ppocrv5-v*"
+
+concurrency:
+  group: model-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify model assets exist
+        run: |
+          test -f site/models/pp-ocrv5/det.onnx
+          test -f site/models/pp-ocrv5/rec.onnx
+          test -f site/models/pp-ocrv5/ppocr_keys_v1.txt
+
+      - name: Create model release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: false
+          make_latest: false
+          fail_on_unmatched_files: true
+          files: |
+            site/models/pp-ocrv5/det.onnx
+            site/models/pp-ocrv5/rec.onnx
+            site/models/pp-ocrv5/ppocr_keys_v1.txt

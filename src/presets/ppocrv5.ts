@@ -9,6 +9,9 @@ import type {
 } from "../types";
 
 export const DEFAULT_ORT_WASM_PATHS = "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/";
+export const DEFAULT_MODEL_RELEASE_TAG = "models-ppocrv5-v1";
+export const DEFAULT_MODEL_BASE_URL =
+  `https://github.com/zxc88645/ffocr/releases/download/${DEFAULT_MODEL_RELEASE_TAG}`;
 
 function createRecommendedOrtOptions(options?: OrtRuntimeOptions): OrtRuntimeOptions {
   return {
@@ -39,6 +42,15 @@ export function createPPOcrV5(options: CreatePPOcrV5Options): PaddleOcrWeb {
   });
 }
 
+export function createDefaultPPOcrV5(
+  options: Omit<CreatePPOcrV5Options, "baseUrl"> = {}
+): PaddleOcrWeb {
+  return createPPOcrV5({
+    ...options,
+    baseUrl: DEFAULT_MODEL_BASE_URL
+  });
+}
+
 export async function ocrWithPPOcrV5(
   source: OcrImageSource,
   options: CreatePPOcrV5Options,
@@ -51,4 +63,19 @@ export async function ocrWithPPOcrV5(
   } finally {
     runtime.dispose();
   }
+}
+
+export async function ocrWithDefaultPPOcrV5(
+  source: OcrImageSource,
+  options: Omit<CreatePPOcrV5Options, "baseUrl"> = {},
+  ocrOptions?: OcrOptions
+): Promise<OcrResult> {
+  return ocrWithPPOcrV5(
+    source,
+    {
+      ...options,
+      baseUrl: DEFAULT_MODEL_BASE_URL
+    },
+    ocrOptions
+  );
 }
