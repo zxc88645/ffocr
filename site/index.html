@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ffocr model hosting</title>
+    <title>ffocr</title>
     <style>
       :root {
         color-scheme: light;
@@ -44,14 +44,44 @@
         border-radius: 8px;
         background: #efe7d8;
       }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 18px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .button-primary {
+        background: #1d1b16;
+        color: white;
+      }
+
+      .button-secondary {
+        background: #efe7d8;
+        color: #1d1b16;
+      }
     </style>
   </head>
   <body>
     <main>
-      <h1>ffocr model hosting</h1>
-      <p>This GitHub Pages site hosts static model files for the <code>ffocr</code> package.</p>
-      <p>Expected model base URL:</p>
-      <p><code>/models/pp-ocrv5</code></p>
+      <h1>ffocr</h1>
+      <p>This GitHub Pages site hosts the browser demo and the default PP-OCRv5 model files.</p>
+      <p>Model base URL: <code>/models/pp-ocrv5</code></p>
+      <div class="actions">
+        <a class="button button-primary" href="./demo/">Open Demo</a>
+        <a class="button button-secondary" href="./models/pp-ocrv5/">Open Model Path</a>
+      </div>
     </main>
   </body>
 </html>

@@ -27,6 +27,16 @@ const ui = {
   resultRuntime: assertElement(resultRuntime, "#result-runtime")
 };
 
+function getDefaultModelBaseUrl(): string {
+  if (typeof window === "undefined") {
+    return "http://localhost:8080/models/pp-ocrv5";
+  }
+
+  return new URL("../models/pp-ocrv5/", window.location.href).toString().replace(/\/$/, "");
+}
+
+ui.modelBaseUrlInput.value = getDefaultModelBaseUrl();
+
 ui.runButton.addEventListener("click", async () => {
   const file = ui.imageInput.files?.[0];
   if (!file) {
@@ -63,5 +73,6 @@ ui.runButton.addEventListener("click", async () => {
   } finally {
     ocr.dispose();
     ui.runButton.disabled = false;
+    URL.revokeObjectURL(objectUrl);
   }
 });

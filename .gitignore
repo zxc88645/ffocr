@@ -4,4 +4,6 @@ dist
 .npm-cache
 .model-work
 /models
+site/demo
+/examples/vite-demo/node_modules
 .DS_Store

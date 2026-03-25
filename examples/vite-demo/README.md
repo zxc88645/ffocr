@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-By default, the demo expects your converted model files to be served from:
+By default, local development expects your converted model files to be served from:
 
 ```text
 http://localhost:8080/models/pp-ocrv5
@@ -27,3 +27,9 @@ That directory should contain:
 - `ppocr_keys_v1.txt`
 
 If you host the files elsewhere, change the `Model Base URL` field in the UI.
+
+For GitHub Pages deployment, the demo is built to `site/demo/` and defaults to:
+
+```text
+https://zxc88645.github.io/ffocr/models/pp-ocrv5
+```
