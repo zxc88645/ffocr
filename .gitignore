@@ -1,4 +1,6 @@
 node_modules
 dist
 .npm-cache
+.model-work
+models
 .DS_Store

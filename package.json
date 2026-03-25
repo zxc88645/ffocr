@@ -23,6 +23,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "check": "tsc --noEmit",
     "models:convert": "scripts/convert-ppocrv5-to-onnx.sh",
+    "models:stage:pages": "scripts/stage-models-for-pages.sh",
     "prepublishOnly": "npm run build && npm run check"
   },
   "keywords": [

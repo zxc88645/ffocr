@@ -77,3 +77,25 @@ After conversion, upload `models/pp-ocrv5/` to one of these:
 - any static CDN
 
 Then use that base URL in `createPPOcrV5BrowserManifest({ baseUrl })`.
+
+## Minimal GitHub Pages hosting
+
+This repo includes the smallest built-in hosting path:
+
+1. Convert the models locally
+2. Stage them for Pages:
+   ```bash
+   npm run models:stage:pages
+   ```
+3. Commit the files under `site/models/pp-ocrv5/`
+4. Push `main`
+
+The workflow in [.github/workflows/deploy-pages.yml](/Users/cfh00911141/git/ffocr/.github/workflows/deploy-pages.yml) will deploy the `site/` folder to GitHub Pages.
+
+If GitHub Pages is not enabled yet for the repository, set Pages to use GitHub Actions in repository settings first.
+
+Expected public base URL:
+
+```text
+https://zxc88645.github.io/ffocr/models/pp-ocrv5
+```

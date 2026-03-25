@@ -128,6 +128,26 @@ Docs:
 - [Model conversion guide](/Users/cfh00911141/git/ffocr/docs/MODEL_CONVERSION.md)
 - [First release guide](/Users/cfh00911141/git/ffocr/docs/RELEASE.md)
 
+## Minimal static hosting
+
+This repo includes a minimal GitHub Pages hosting path for model files.
+
+After conversion:
+
+```bash
+npm run models:stage:pages
+```
+
+That copies the converted files into `site/models/pp-ocrv5/`. Commit those files and push `main`, and the Pages workflow will deploy them.
+
+If this is the first Pages deployment for the repo, set GitHub Pages to use GitHub Actions in repository settings.
+
+Expected model base URL:
+
+```text
+https://zxc88645.github.io/ffocr/models/pp-ocrv5
+```
+
 ## Demo app
 
 A runnable example app is included in [examples/vite-demo](/Users/cfh00911141/git/ffocr/examples/vite-demo/README.md).
@@ -150,10 +170,11 @@ npm install
 npm run build
 npm run check
 npm pack --dry-run --cache .npm-cache
-npm publish --access public
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
-If you want GitHub Actions publishing, configure `NPM_TOKEN` and use [publish.yml](/Users/cfh00911141/git/ffocr/.github/workflows/publish.yml).
+With `NPM_TOKEN` configured in GitHub Actions secrets, pushing a `v*` tag will publish to npm automatically and create a GitHub Release automatically.
 
 ## Current limitations
 
