@@ -5,6 +5,7 @@ import {
   type ExecutionProvider,
   type OcrProgress,
   type OcrResult,
+  type PaddleOcrWeb,
   type PPOcrV5ModelVariant
 } from "ffocr";
 
@@ -36,6 +37,30 @@ const ui = {
 };
 
 let lastResult: OcrResult | null = null;
+
+let cachedOcr: PaddleOcrWeb | null = null;
+let cachedOcrKey = "";
+
+function getOrCreateOcr(
+  baseUrl: string,
+  variant: PPOcrV5ModelVariant,
+  provider: "auto" | ExecutionProvider
+): PaddleOcrWeb {
+  const key = `${baseUrl}|${variant}|${provider}`;
+  if (cachedOcr && cachedOcrKey === key) {
+    return cachedOcr;
+  }
+  cachedOcr?.dispose();
+  cachedOcr = createPPOcrV5({
+    baseUrl,
+    modelVariant: variant,
+    providerPreference: provider === "auto" ? "auto" : provider,
+    warmup: true,
+    cacheModels: true
+  });
+  cachedOcrKey = key;
+  return cachedOcr;
+}
 
 function getDefaultModelBaseUrl(): string {
   if (typeof window === "undefined") {
@@ -244,12 +269,7 @@ ui.runButton.addEventListener("click", async () => {
     recognizing: "Recognizing text…"
   };
 
-  const ocr = createPPOcrV5({
-    baseUrl: modelBaseUrl,
-    modelVariant: selectedVariant,
-    providerPreference: selectedProvider === "auto" ? "auto" : selectedProvider,
-    warmup: true
-  });
+  const ocr = getOrCreateOcr(modelBaseUrl, selectedVariant, selectedProvider);
 
   try {
     const startTime = performance.now();
@@ -287,7 +307,6 @@ ui.runButton.addEventListener("click", async () => {
     ui.status.textContent =
       error instanceof Error ? `OCR failed: ${error.message}` : "OCR failed with an unknown error.";
   } finally {
-    ocr.dispose();
     ui.runButton.disabled = false;
     URL.revokeObjectURL(objectUrl);
   }

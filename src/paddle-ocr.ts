@@ -98,6 +98,8 @@ export class PaddleOcrWeb {
 
     const provider = await this.selectProvider();
 
+    const useCache = this.options.cacheModels;
+
     onProgress?.({ phase: "loading_detection_model" });
     this.detectorSession = await createSession(
       this.options.manifest.detection.url,
@@ -105,7 +107,8 @@ export class PaddleOcrWeb {
       onProgress
         ? (loaded, totalBytes) =>
             onProgress({ phase: "loading_detection_model", loaded, totalBytes: totalBytes ?? undefined })
-        : undefined
+        : undefined,
+      useCache
     );
 
     onProgress?.({ phase: "loading_recognition_model" });
@@ -115,7 +118,8 @@ export class PaddleOcrWeb {
       onProgress
         ? (loaded, totalBytes) =>
             onProgress({ phase: "loading_recognition_model", loaded, totalBytes: totalBytes ?? undefined })
-        : undefined
+        : undefined,
+      useCache
     );
 
     if (this.options.warmup) {

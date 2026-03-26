@@ -23,15 +23,12 @@ export function configureOrt(options?: OrtRuntimeOptions): void {
   configured = true;
 }
 
-async function fetchWithProgress(
-  url: string,
+const MODEL_CACHE_NAME = "ffocr-models";
+
+async function readResponseWithProgress(
+  response: Response,
   onProgress?: DownloadProgressCallback
 ): Promise<ArrayBuffer> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status}`);
-  }
-
   if (!onProgress || !response.body) {
     return response.arrayBuffer();
   }
@@ -59,12 +56,42 @@ async function fetchWithProgress(
   return result.buffer;
 }
 
+async function fetchWithProgress(
+  url: string,
+  onProgress?: DownloadProgressCallback,
+  useCache?: boolean
+): Promise<ArrayBuffer> {
+  if (useCache && typeof caches !== "undefined") {
+    const cache = await caches.open(MODEL_CACHE_NAME);
+    const cached = await cache.match(url);
+    if (cached) {
+      return readResponseWithProgress(cached, onProgress);
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url}: ${response.status}`);
+    }
+
+    const cloned = response.clone();
+    cache.put(url, cloned);
+    return readResponseWithProgress(response, onProgress);
+  }
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  }
+  return readResponseWithProgress(response, onProgress);
+}
+
 export async function createSession(
   url: string,
   provider: ExecutionProvider,
-  onDownloadProgress?: DownloadProgressCallback
+  onDownloadProgress?: DownloadProgressCallback,
+  useCache?: boolean
 ): Promise<OrtSession> {
-  const data = await fetchWithProgress(url, onDownloadProgress);
+  const data = await fetchWithProgress(url, onDownloadProgress, useCache);
   return ort.InferenceSession.create(data, {
     executionProviders: [provider],
     graphOptimizationLevel: "all"

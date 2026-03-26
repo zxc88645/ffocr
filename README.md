@@ -35,6 +35,14 @@ const result = await ocr.ocr(fileOrBlobOrUrl);
 console.log(result.text);
 ```
 
+## Model caching
+
+Enable `cacheModels` to persist downloaded models in the browser's Cache API. Subsequent page loads will read from cache instead of re-downloading:
+
+```ts
+const ocr = createDefaultPPOcrV5({ cacheModels: true });
+```
+
 ## Progress callback
 
 Track loading, download, and inference progress via `onProgress`:

@@ -42,6 +42,8 @@ export interface CreatePaddleOcrOptions {
   autoBenchmark?: boolean;
   benchmarkCache?: boolean;
   warmup?: boolean;
+  /** Cache downloaded models via the Cache API so they persist across page reloads. Defaults to false. */
+  cacheModels?: boolean;
   ort?: OrtRuntimeOptions;
 }
 
