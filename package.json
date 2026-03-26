@@ -25,6 +25,8 @@
     "models:patch:webgpu": "node scripts/patch-onnx-webgpu-compat.mjs",
     "models:convert": "scripts/convert-ppocrv5-to-onnx.sh",
     "models:stage:pages": "scripts/stage-models-for-pages.sh",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "npm run build && npm run check"
   },
   "keywords": [
@@ -51,6 +53,7 @@
   "devDependencies": {
     "onnx-proto": "^8.0.1",
     "tsup": "^8.0.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.1"
   }
 }

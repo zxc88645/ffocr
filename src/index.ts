@@ -1,5 +1,5 @@
 export { createPaddleOcr, PaddleOcrWeb } from "./paddle-ocr";
-export { createPPOcrV5BrowserManifest, officialPaddleOcrSources } from "./manifests/official";
+export { createPPOcrV5BrowserManifest, DEFAULT_DICTIONARY_URL } from "./manifests/official";
 export {
   createDefaultPPOcrV5,
   createPPOcrV5,
