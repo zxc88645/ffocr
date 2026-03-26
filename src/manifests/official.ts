@@ -26,21 +26,21 @@ function resolveDetectionPath(options: OfficialManifestOptions): string {
   if (options.detectionModelPath) {
     return options.detectionModelPath;
   }
-  return PPOCRV5_MODEL_PATHS.detection[options.modelVariant ?? "server"];
+  return PPOCRV5_MODEL_PATHS.detection[options.modelVariant ?? "mobile"];
 }
 
 function resolveRecognitionPath(options: OfficialManifestOptions): string {
   if (options.recognitionModelPath) {
     return options.recognitionModelPath;
   }
-  return PPOCRV5_MODEL_PATHS.recognition[options.modelVariant ?? "server"];
+  return PPOCRV5_MODEL_PATHS.recognition[options.modelVariant ?? "mobile"];
 }
 
 export function createPPOcrV5BrowserManifest(
   options: OfficialManifestOptions
 ): PaddleOcrModelManifest {
   const normalizedBase = options.baseUrl.replace(/\/$/, "");
-  const variant = options.modelVariant ?? "server";
+  const variant = options.modelVariant ?? "mobile";
 
   return {
     id: variant === "server" ? "pp-ocrv5-browser" : `pp-ocrv5-${variant}-browser`,

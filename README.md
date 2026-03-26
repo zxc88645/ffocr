@@ -2,7 +2,9 @@
 
 Browser OCR for frontend apps using PaddleOCR models converted to ONNX.
 
-**Live Demo**: https://zxc88645.github.io/ffocr/demo/
+**npm**: <https://www.npmjs.com/package/ffocr>
+
+**Live Demo**: <https://zxc88645.github.io/ffocr/demo/>
 
 ## Install
 
@@ -33,6 +35,27 @@ const ocr = createPPOcrV5({
 
 const result = await ocr.ocr(fileOrBlobOrUrl);
 console.log(result.text);
+```
+
+## Model variant
+
+PP-OCRv5 ships two model variants: `mobile` (default) and `server`. The `mobile` variant is smaller and faster, while `server` offers higher accuracy at a larger size.
+
+```ts
+// Uses the default mobile model
+const ocr = createDefaultPPOcrV5();
+
+// Switch to the server model
+const ocr = createDefaultPPOcrV5({ modelVariant: "server" });
+```
+
+The same option works with a custom `baseUrl`:
+
+```ts
+const ocr = createPPOcrV5({
+  baseUrl: "https://your-cdn.example.com/models/pp-ocrv5",
+  modelVariant: "server"
+});
 ```
 
 ## Model caching
