@@ -26,7 +26,7 @@ models/pp-ocrv5/
 ├── det_mobile.onnx   (mobile detection)
 ├── rec_server.onnx   (server recognition)
 ├── rec_mobile.onnx   (mobile recognition)
-└── ppocr_keys_v1.txt
+└── ppocrv5_dict.txt
 ```
 
 ## Model variants

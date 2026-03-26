@@ -59,9 +59,11 @@ Lower-level API for custom manifests or model paths.
 
 A model base URL must point to a folder containing:
 
-- `det.onnx`
-- `rec.onnx`
-- `ppocr_keys_v1.txt`
+- `det_server.onnx`
+- `det_mobile.onnx`
+- `rec_server.onnx`
+- `rec_mobile.onnx`
+- `ppocrv5_dict.txt`
 
 The default hosted model URL only works after those files have been uploaded to the GitHub Release described in [`docs/MODEL_RELEASES.md`](./docs/MODEL_RELEASES.md).
 

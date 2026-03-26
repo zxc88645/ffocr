@@ -86,10 +86,10 @@ describe("createPPOcrV5BrowserManifest", () => {
       baseUrl: "https://example.com"
     });
 
-    expect(manifest.detectionLimitSideLen).toBe(736);
+    expect(manifest.detectionLimitSideLen).toBe(960);
     expect(manifest.detectionThreshold).toBe(0.3);
     expect(manifest.detectionBoxThreshold).toBe(0.6);
-    expect(manifest.detectionUnclipRatio).toBe(1.8);
+    expect(manifest.detectionUnclipRatio).toBe(1.5);
     expect(manifest.detectionMinSize).toBe(3);
     expect(manifest.recognitionImageShape).toEqual([3, 48, 320]);
   });

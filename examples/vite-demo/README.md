@@ -22,9 +22,11 @@ http://localhost:8080/models/pp-ocrv5
 
 That directory should contain:
 
-- `det.onnx`
-- `rec.onnx`
-- `ppocr_keys_v1.txt`
+- `det_server.onnx`
+- `det_mobile.onnx`
+- `rec_server.onnx`
+- `rec_mobile.onnx`
+- `ppocrv5_dict.txt`
 
 If you host the files elsewhere, change the `Model Base URL` field in the UI.
 

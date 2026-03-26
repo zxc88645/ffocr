@@ -38,10 +38,11 @@ async function loadDictionary(source: DictionarySource): Promise<string[]> {
   }
 
   const text = await response.text();
-  return text
-    .split(/\r?\n/u)
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const lines = text.split(/\r?\n/u);
+  if (lines.at(-1) === "") {
+    lines.pop();
+  }
+  return lines;
 }
 
 function createBlankTensor(width: number, height: number): Float32Array {
@@ -161,7 +162,7 @@ export class PaddleOcrWeb {
     const image = await ensureImageData(source);
     const detectionInput = preprocessDetection(
       image,
-      this.options.manifest.detectionLimitSideLen ?? 736
+      this.options.manifest.detectionLimitSideLen ?? 960
     );
     const detectionOutput = await runSession(
       this.detectorSession,
@@ -180,7 +181,7 @@ export class PaddleOcrWeb {
         resizedHeight: detectionInput.resizedHeight,
         threshold: this.options.manifest.detectionThreshold ?? 0.3,
         boxThreshold: this.options.manifest.detectionBoxThreshold ?? 0.6,
-        unclipRatio: this.options.manifest.detectionUnclipRatio ?? 1.8,
+        unclipRatio: this.options.manifest.detectionUnclipRatio ?? 1.5,
         minSize: this.options.manifest.detectionMinSize ?? 3
       })
     );

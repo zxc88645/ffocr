@@ -13,7 +13,7 @@ DET_MOBILE_REPO="${DET_MOBILE_REPO:-PaddlePaddle/PP-OCRv5_mobile_det}"
 REC_SERVER_REPO="${REC_SERVER_REPO:-PaddlePaddle/PP-OCRv5_server_rec}"
 REC_MOBILE_REPO="${REC_MOBILE_REPO:-PaddlePaddle/PP-OCRv5_mobile_rec}"
 HF_REVISION="${HF_REVISION:-main}"
-DICT_URL="${DICT_URL:-https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/ppocr_keys_v1.txt}"
+DICT_URL="${DICT_URL:-https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/dict/ppocrv5_dict.txt}"
 
 log() {
   printf '[ffocr] %s\n' "$1"
@@ -111,7 +111,7 @@ main() {
     "${OUTPUT_DIR}/rec_mobile.onnx"
 
   log "Downloading dictionary"
-  curl -L "${DICT_URL}" -o "${OUTPUT_DIR}/ppocr_keys_v1.txt"
+  curl -L "${DICT_URL}" -o "${OUTPUT_DIR}/ppocrv5_dict.txt"
 
   log "Done"
   log "Output directory: ${OUTPUT_DIR}"

@@ -75,10 +75,10 @@ function makeManifest(overrides: Partial<PaddleOcrModelManifest> = {}): PaddleOc
     detection: { url: "https://example.com/det.onnx" },
     recognition: { url: "https://example.com/rec.onnx" },
     dictionary: DICTIONARY,
-    detectionLimitSideLen: 736,
+    detectionLimitSideLen: 960,
     detectionThreshold: 0.3,
     detectionBoxThreshold: 0.5,
-    detectionUnclipRatio: 1.8,
+    detectionUnclipRatio: 1.5,
     detectionMinSize: 3,
     recognitionImageShape: [3, 48, 320],
     ...overrides

@@ -24,7 +24,7 @@ jobs:
           test -f site/models/pp-ocrv5/det_mobile.onnx
           test -f site/models/pp-ocrv5/rec_server.onnx
           test -f site/models/pp-ocrv5/rec_mobile.onnx
-          test -f site/models/pp-ocrv5/ppocr_keys_v1.txt
+          test -f site/models/pp-ocrv5/ppocrv5_dict.txt
 
       - name: Create model release
         uses: softprops/action-gh-release@v2
@@ -39,4 +39,4 @@ jobs:
             site/models/pp-ocrv5/det_mobile.onnx
             site/models/pp-ocrv5/rec_server.onnx
             site/models/pp-ocrv5/rec_mobile.onnx
-            site/models/pp-ocrv5/ppocr_keys_v1.txt
+            site/models/pp-ocrv5/ppocrv5_dict.txt

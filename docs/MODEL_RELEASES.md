@@ -20,7 +20,7 @@ Upload these files to the GitHub Release:
 - `det_mobile.onnx` — PP-OCRv5 mobile detection model
 - `rec_server.onnx` — PP-OCRv5 server recognition model
 - `rec_mobile.onnx` — PP-OCRv5 mobile recognition model
-- `ppocr_keys_v1.txt`
+- `ppocrv5_dict.txt`
 
 ## Prepare assets
 
@@ -58,7 +58,7 @@ The workflow in `.github/workflows/model-release.yml` will automatically create 
 - `det_mobile.onnx`
 - `rec_server.onnx`
 - `rec_mobile.onnx`
-- `ppocr_keys_v1.txt`
+- `ppocrv5_dict.txt`
 
 ## Default package URL
 
