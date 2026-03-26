@@ -18,9 +18,9 @@ describe("constants", () => {
     expect(typeof DEFAULT_MODEL_RELEASE_TAG).toBe("string");
   });
 
-  it("DEFAULT_MODEL_BASE_URL contains the release tag", () => {
-    expect(DEFAULT_MODEL_BASE_URL).toContain(DEFAULT_MODEL_RELEASE_TAG);
-    expect(DEFAULT_MODEL_BASE_URL).toContain("github.com");
+  it("DEFAULT_MODEL_BASE_URL points to GitHub Pages", () => {
+    expect(DEFAULT_MODEL_BASE_URL).toContain("github.io");
+    expect(DEFAULT_MODEL_BASE_URL).toContain("ffocr");
   });
 });
 

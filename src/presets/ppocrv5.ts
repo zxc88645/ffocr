@@ -11,7 +11,7 @@ import type {
 export const DEFAULT_ORT_WASM_PATHS = "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/";
 export const DEFAULT_MODEL_RELEASE_TAG = "models-ppocrv5-v4";
 export const DEFAULT_MODEL_BASE_URL =
-  `https://github.com/zxc88645/ffocr/releases/download/${DEFAULT_MODEL_RELEASE_TAG}`;
+  "https://zxc88645.github.io/ffocr/models/pp-ocrv5";
 
 function createRecommendedOrtOptions(options?: OrtRuntimeOptions): OrtRuntimeOptions {
   return {
