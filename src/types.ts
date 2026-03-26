@@ -45,9 +45,12 @@ export interface CreatePaddleOcrOptions {
   ort?: OrtRuntimeOptions;
 }
 
+export type PPOcrV5ModelVariant = "server" | "mobile";
+
 export interface CreatePPOcrV5Options extends Omit<CreatePaddleOcrOptions, "manifest"> {
   baseUrl: string;
   dictionaryUrl?: string;
+  modelVariant?: PPOcrV5ModelVariant;
   detectionModelPath?: string;
   recognitionModelPath?: string;
 }

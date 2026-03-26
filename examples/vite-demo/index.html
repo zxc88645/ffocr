@@ -33,12 +33,28 @@
           <input id="image-input" type="file" accept="image/*" />
         </label>
 
+        <div class="field-row">
+          <label class="field">
+            <span>Model Variant</span>
+            <select id="variant-select">
+              <option value="server">Server (higher accuracy)</option>
+              <option value="mobile">Mobile (faster, smaller)</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Execution Provider</span>
+            <select id="provider-select"></select>
+          </label>
+        </div>
+
         <label class="field">
-          <span>Execution Provider</span>
-          <select id="provider-select"></select>
-          <small id="provider-note" class="field-note"></small>
+          <span>Min Confidence: <output id="confidence-value">0.00</output></span>
+          <input id="confidence-slider" type="range" min="0" max="1" step="0.01" value="0" />
+          <small class="field-note">Lines below this confidence score will be hidden from overlay and text output.</small>
         </label>
 
+        <small id="provider-note" class="field-note"></small>
         <div id="provider-detected" class="provider-detected" aria-live="polite"></div>
 
         <button id="run-button" type="button">Run OCR</button>
@@ -60,8 +76,16 @@
       <section class="panel result-panel">
         <h2>Detected Text</h2>
         <pre id="result-text"></pre>
-        <h2>Runtime</h2>
-        <pre id="result-runtime"></pre>
+
+        <details class="log-details">
+          <summary><h2 class="inline-heading">Raw Inference Log</h2></summary>
+          <pre id="result-log" class="result-log"></pre>
+        </details>
+
+        <details class="log-details">
+          <summary><h2 class="inline-heading">Runtime</h2></summary>
+          <pre id="result-runtime"></pre>
+        </details>
       </section>
     </main>
   </body>

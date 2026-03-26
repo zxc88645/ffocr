@@ -1,5 +1,9 @@
 export { createPaddleOcr, PaddleOcrWeb } from "./paddle-ocr";
-export { createPPOcrV5BrowserManifest, DEFAULT_DICTIONARY_URL } from "./manifests/official";
+export {
+  createPPOcrV5BrowserManifest,
+  DEFAULT_DICTIONARY_URL,
+  PPOCRV5_MODEL_PATHS
+} from "./manifests/official";
 export {
   createDefaultPPOcrV5,
   createPPOcrV5,
@@ -31,6 +35,7 @@ export type {
   OcrOptions,
   OcrResult,
   PaddleOcrModelManifest,
+  PPOcrV5ModelVariant,
   ProviderPreference,
   RuntimeSelection
 } from "./types";

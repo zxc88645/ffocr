@@ -41,6 +41,21 @@ describe("createPPOcrV5", () => {
     });
     expect(() => instance.dispose()).not.toThrow();
   });
+
+  it("accepts modelVariant option", () => {
+    const mobile = createPPOcrV5({
+      baseUrl: "https://example.com/models",
+      modelVariant: "mobile"
+    });
+    expect(mobile).toBeDefined();
+    expect(typeof mobile.ocr).toBe("function");
+
+    const server = createPPOcrV5({
+      baseUrl: "https://example.com/models",
+      modelVariant: "server"
+    });
+    expect(server).toBeDefined();
+  });
 });
 
 describe("createDefaultPPOcrV5", () => {
@@ -53,6 +68,13 @@ describe("createDefaultPPOcrV5", () => {
   it("accepts optional overrides", () => {
     const instance = createDefaultPPOcrV5({
       providerPreference: "wasm"
+    });
+    expect(instance).toBeDefined();
+  });
+
+  it("accepts modelVariant override", () => {
+    const instance = createDefaultPPOcrV5({
+      modelVariant: "mobile"
     });
     expect(instance).toBeDefined();
   });

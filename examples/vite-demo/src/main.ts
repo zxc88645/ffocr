@@ -3,49 +3,43 @@ import {
   createPPOcrV5,
   getExecutionProviderSupport,
   type ExecutionProvider,
-  type OcrResult
+  type OcrResult,
+  type PPOcrV5ModelVariant
 } from "ffocr";
 
-const imageInput = document.querySelector<HTMLInputElement>("#image-input");
-const modelBaseUrlInput = document.querySelector<HTMLInputElement>("#model-base-url");
-const providerSelect = document.querySelector<HTMLSelectElement>("#provider-select");
-const providerNote = document.querySelector<HTMLElement>("#provider-note");
-const providerDetected = document.querySelector<HTMLElement>("#provider-detected");
-const runButton = document.querySelector<HTMLButtonElement>("#run-button");
-const preview = document.querySelector<HTMLImageElement>("#preview");
-const previewOverlay = document.querySelector<SVGSVGElement>("#preview-overlay");
-const status = document.querySelector<HTMLElement>("#status");
-const resultText = document.querySelector<HTMLElement>("#result-text");
-const resultRuntime = document.querySelector<HTMLElement>("#result-runtime");
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 function assertElement<T>(value: T | null, label: string): T {
   if (!value) {
     throw new Error(`Missing required element: ${label}`);
   }
-
   return value;
 }
 
 const ui = {
-  imageInput: assertElement(imageInput, "#image-input"),
-  modelBaseUrlInput: assertElement(modelBaseUrlInput, "#model-base-url"),
-  providerSelect: assertElement(providerSelect, "#provider-select"),
-  providerNote: assertElement(providerNote, "#provider-note"),
-  providerDetected: assertElement(providerDetected, "#provider-detected"),
-  runButton: assertElement(runButton, "#run-button"),
-  preview: assertElement(preview, "#preview"),
-  previewOverlay: assertElement(previewOverlay, "#preview-overlay"),
-  status: assertElement(status, "#status"),
-  resultText: assertElement(resultText, "#result-text"),
-  resultRuntime: assertElement(resultRuntime, "#result-runtime")
+  imageInput: assertElement(document.querySelector<HTMLInputElement>("#image-input"), "#image-input"),
+  modelBaseUrlInput: assertElement(document.querySelector<HTMLInputElement>("#model-base-url"), "#model-base-url"),
+  variantSelect: assertElement(document.querySelector<HTMLSelectElement>("#variant-select"), "#variant-select"),
+  providerSelect: assertElement(document.querySelector<HTMLSelectElement>("#provider-select"), "#provider-select"),
+  providerNote: assertElement(document.querySelector<HTMLElement>("#provider-note"), "#provider-note"),
+  providerDetected: assertElement(document.querySelector<HTMLElement>("#provider-detected"), "#provider-detected"),
+  confidenceSlider: assertElement(document.querySelector<HTMLInputElement>("#confidence-slider"), "#confidence-slider"),
+  confidenceValue: assertElement(document.querySelector<HTMLOutputElement>("#confidence-value"), "#confidence-value"),
+  runButton: assertElement(document.querySelector<HTMLButtonElement>("#run-button"), "#run-button"),
+  preview: assertElement(document.querySelector<HTMLImageElement>("#preview"), "#preview"),
+  previewOverlay: assertElement(document.querySelector<SVGSVGElement>("#preview-overlay"), "#preview-overlay"),
+  status: assertElement(document.querySelector<HTMLElement>("#status"), "#status"),
+  resultText: assertElement(document.querySelector<HTMLElement>("#result-text"), "#result-text"),
+  resultLog: assertElement(document.querySelector<HTMLElement>("#result-log"), "#result-log"),
+  resultRuntime: assertElement(document.querySelector<HTMLElement>("#result-runtime"), "#result-runtime")
 };
+
+let lastResult: OcrResult | null = null;
 
 function getDefaultModelBaseUrl(): string {
   if (typeof window === "undefined") {
     return "http://localhost:8080/models/pp-ocrv5";
   }
-
   return new URL("../models/pp-ocrv5/", window.location.href).toString().replace(/\/$/, "");
 }
 
@@ -65,7 +59,6 @@ function formatProviderLabel(provider: ExecutionProvider): string {
 function updateProviderUi(): void {
   const support = getExecutionProviderSupport();
   const available = support.filter((item) => item.available);
-  const unavailable = support.filter((item) => !item.available);
 
   ui.providerSelect.replaceChildren();
 
@@ -103,12 +96,6 @@ function updateProviderUi(): void {
     ui.providerNote.textContent =
       "No browser runtime was detected up front. The demo will still try WASM when you run OCR.";
   }
-
-  if (unavailable.length === 0) {
-    ui.providerDetected.dataset.allAvailable = "true";
-  } else {
-    delete ui.providerDetected.dataset.allAvailable;
-  }
 }
 
 function clearOverlay(): void {
@@ -123,15 +110,22 @@ function createSvgElement<K extends keyof SVGElementTagNameMap>(
   return document.createElementNS(SVG_NS, tagName);
 }
 
+function getMinConfidence(): number {
+  return parseFloat(ui.confidenceSlider.value);
+}
+
 function renderOverlay(result: OcrResult): void {
   clearOverlay();
   ui.previewOverlay.setAttribute("viewBox", `0 0 ${result.image.width} ${result.image.height}`);
   ui.previewOverlay.classList.remove("is-empty");
 
-  result.lines.forEach((line, index) => {
+  const minConf = getMinConfidence();
+  const filteredLines = result.lines.filter((line) => line.score >= minConf);
+
+  filteredLines.forEach((line, index) => {
     const [topLeft] = line.box.points;
     const points = line.box.points.map((point) => `${point.x},${point.y}`).join(" ");
-    const label = `${index + 1}. ${line.text || "(blank)"}`;
+    const label = `${index + 1}. ${line.text || "(blank)"} [${(line.score * 100).toFixed(1)}%]`;
     const labelWidth = Math.min(
       result.image.width - topLeft.x,
       Math.max(54, label.length * 7.2)
@@ -162,13 +156,54 @@ function renderOverlay(result: OcrResult): void {
   });
 }
 
+function updateFilteredOutput(): void {
+  if (!lastResult) return;
+
+  const minConf = getMinConfidence();
+  const filteredLines = lastResult.lines.filter((line) => line.score >= minConf);
+  const filteredText = filteredLines.map((line) => line.text).join("\n");
+  ui.resultText.textContent = filteredText || "(No text above confidence threshold)";
+
+  renderOverlay(lastResult);
+}
+
+function formatRawLog(result: OcrResult): string {
+  const lines = result.lines.map((line, i) => ({
+    index: i + 1,
+    text: line.text,
+    confidence: +(line.score * 100).toFixed(2),
+    box: {
+      score: +line.box.score.toFixed(4),
+      points: line.box.points.map((p) => ({ x: +p.x.toFixed(1), y: +p.y.toFixed(1) }))
+    }
+  }));
+
+  return JSON.stringify(
+    {
+      image: result.image,
+      runtime: result.runtime,
+      totalLines: result.lines.length,
+      lines
+    },
+    null,
+    2
+  );
+}
+
 ui.modelBaseUrlInput.value = getDefaultModelBaseUrl();
 updateProviderUi();
 clearOverlay();
 
+ui.confidenceSlider.addEventListener("input", () => {
+  ui.confidenceValue.textContent = parseFloat(ui.confidenceSlider.value).toFixed(2);
+  updateFilteredOutput();
+});
+
 ui.imageInput.addEventListener("change", () => {
   clearOverlay();
+  lastResult = null;
   ui.resultText.textContent = "";
+  ui.resultLog.textContent = "";
   ui.resultRuntime.textContent = "";
 });
 
@@ -188,27 +223,38 @@ ui.runButton.addEventListener("click", async () => {
   const objectUrl = URL.createObjectURL(file);
   ui.preview.src = objectUrl;
   clearOverlay();
+  lastResult = null;
   ui.resultText.textContent = "";
+  ui.resultLog.textContent = "";
   ui.resultRuntime.textContent = "";
-  ui.status.textContent = "Loading models, checking the selected runtime, and running OCR...";
-  ui.runButton.disabled = true;
 
   const selectedProvider = ui.providerSelect.value as "auto" | ExecutionProvider;
+  const selectedVariant = ui.variantSelect.value as PPOcrV5ModelVariant;
+
+  ui.status.textContent = `Loading ${selectedVariant} models, running OCR…`;
+  ui.runButton.disabled = true;
+
   const ocr = createPPOcrV5({
     baseUrl: modelBaseUrl,
+    modelVariant: selectedVariant,
     providerPreference: selectedProvider === "auto" ? "auto" : selectedProvider,
     warmup: true
   });
 
   try {
+    const startTime = performance.now();
     const result = await ocr.ocr(file);
-    ui.resultText.textContent = result.text || "(No text detected)";
+    const elapsed = performance.now() - startTime;
+
+    lastResult = result;
+    updateFilteredOutput();
+    ui.resultLog.textContent = formatRawLog(result);
     ui.resultRuntime.textContent = JSON.stringify(result.runtime, null, 2);
-    renderOverlay(result);
+
+    const providerLabel = formatProviderLabel(result.runtime.provider);
     ui.status.textContent =
-      selectedProvider === "auto"
-        ? `Done. Auto selected ${formatProviderLabel(result.runtime.provider)}.`
-        : `Done. Provider: ${formatProviderLabel(result.runtime.provider)}.`;
+      `Done in ${(elapsed / 1000).toFixed(2)}s · ${result.lines.length} line(s) · ` +
+      `${selectedVariant} variant · ${providerLabel}`;
   } catch (error) {
     clearOverlay();
     ui.status.textContent =

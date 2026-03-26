@@ -8,8 +8,10 @@ OUTPUT_DIR="${OUTPUT_DIR:-${ROOT_DIR}/models/pp-ocrv5}"
 PADDLE_TMP_DIR="${WORK_DIR}/paddle"
 ONNX_TMP_DIR="${WORK_DIR}/onnx"
 
-DET_REPO="${DET_REPO:-PaddlePaddle/PP-OCRv5_server_det}"
-REC_REPO="${REC_REPO:-PaddlePaddle/PP-OCRv5_server_rec}"
+DET_SERVER_REPO="${DET_SERVER_REPO:-PaddlePaddle/PP-OCRv5_server_det}"
+DET_MOBILE_REPO="${DET_MOBILE_REPO:-PaddlePaddle/PP-OCRv5_mobile_det}"
+REC_SERVER_REPO="${REC_SERVER_REPO:-PaddlePaddle/PP-OCRv5_server_rec}"
+REC_MOBILE_REPO="${REC_MOBILE_REPO:-PaddlePaddle/PP-OCRv5_mobile_rec}"
 HF_REVISION="${HF_REVISION:-main}"
 DICT_URL="${DICT_URL:-https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/ppocr_keys_v1.txt}"
 
@@ -86,19 +88,27 @@ main() {
   log "Installing Paddle2ONNX plugin if needed"
   PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True paddlex --install paddle2onnx
 
-  download_hf_model "${DET_REPO}" "${PADDLE_TMP_DIR}/det"
-  download_hf_model "${REC_REPO}" "${PADDLE_TMP_DIR}/rec"
+  download_hf_model "${DET_SERVER_REPO}" "${PADDLE_TMP_DIR}/det_server"
+  download_hf_model "${DET_MOBILE_REPO}" "${PADDLE_TMP_DIR}/det_mobile"
+  download_hf_model "${REC_SERVER_REPO}" "${PADDLE_TMP_DIR}/rec_server"
+  download_hf_model "${REC_MOBILE_REPO}" "${PADDLE_TMP_DIR}/rec_mobile"
 
-  convert_to_onnx "${PADDLE_TMP_DIR}/det" "${ONNX_TMP_DIR}/det"
-  convert_to_onnx "${PADDLE_TMP_DIR}/rec" "${ONNX_TMP_DIR}/rec"
+  convert_to_onnx "${PADDLE_TMP_DIR}/det_server" "${ONNX_TMP_DIR}/det_server"
+  convert_to_onnx "${PADDLE_TMP_DIR}/det_mobile" "${ONNX_TMP_DIR}/det_mobile"
+  convert_to_onnx "${PADDLE_TMP_DIR}/rec_server" "${ONNX_TMP_DIR}/rec_server"
+  convert_to_onnx "${PADDLE_TMP_DIR}/rec_mobile" "${ONNX_TMP_DIR}/rec_mobile"
 
-  copy_model_file "${ONNX_TMP_DIR}/det" "${OUTPUT_DIR}/det.onnx"
-  copy_model_file "${ONNX_TMP_DIR}/rec" "${OUTPUT_DIR}/rec.onnx"
+  copy_model_file "${ONNX_TMP_DIR}/det_server" "${OUTPUT_DIR}/det_server.onnx"
+  copy_model_file "${ONNX_TMP_DIR}/det_mobile" "${OUTPUT_DIR}/det_mobile.onnx"
+  copy_model_file "${ONNX_TMP_DIR}/rec_server" "${OUTPUT_DIR}/rec_server.onnx"
+  copy_model_file "${ONNX_TMP_DIR}/rec_mobile" "${OUTPUT_DIR}/rec_mobile.onnx"
 
   log "Patching ONNX models for ONNX Runtime WebGPU compatibility"
   node "${ROOT_DIR}/scripts/patch-onnx-webgpu-compat.mjs" \
-    "${OUTPUT_DIR}/det.onnx" \
-    "${OUTPUT_DIR}/rec.onnx"
+    "${OUTPUT_DIR}/det_server.onnx" \
+    "${OUTPUT_DIR}/det_mobile.onnx" \
+    "${OUTPUT_DIR}/rec_server.onnx" \
+    "${OUTPUT_DIR}/rec_mobile.onnx"
 
   log "Downloading dictionary"
   curl -L "${DICT_URL}" -o "${OUTPUT_DIR}/ppocr_keys_v1.txt"

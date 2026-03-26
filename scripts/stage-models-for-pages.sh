@@ -20,14 +20,18 @@ log() {
 }
 
 main() {
-  require_file "${SOURCE_DIR}/det.onnx"
-  require_file "${SOURCE_DIR}/rec.onnx"
+  require_file "${SOURCE_DIR}/det_server.onnx"
+  require_file "${SOURCE_DIR}/det_mobile.onnx"
+  require_file "${SOURCE_DIR}/rec_server.onnx"
+  require_file "${SOURCE_DIR}/rec_mobile.onnx"
   require_file "${SOURCE_DIR}/ppocr_keys_v1.txt"
 
   mkdir -p "${TARGET_DIR}"
 
-  cp "${SOURCE_DIR}/det.onnx" "${TARGET_DIR}/det.onnx"
-  cp "${SOURCE_DIR}/rec.onnx" "${TARGET_DIR}/rec.onnx"
+  cp "${SOURCE_DIR}/det_server.onnx" "${TARGET_DIR}/det_server.onnx"
+  cp "${SOURCE_DIR}/det_mobile.onnx" "${TARGET_DIR}/det_mobile.onnx"
+  cp "${SOURCE_DIR}/rec_server.onnx" "${TARGET_DIR}/rec_server.onnx"
+  cp "${SOURCE_DIR}/rec_mobile.onnx" "${TARGET_DIR}/rec_mobile.onnx"
   cp "${SOURCE_DIR}/ppocr_keys_v1.txt" "${TARGET_DIR}/ppocr_keys_v1.txt"
 
   log "Staged models for GitHub Pages"

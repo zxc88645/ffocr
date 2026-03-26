@@ -7,17 +7,19 @@ Use GitHub Releases to host the default browser model files.
 Use a dedicated tag for hosted model assets:
 
 ```text
-models-ppocrv5-v1
+models-ppocrv5-v2
 ```
 
 That matches the current default URL exported by the package.
 
 ## Required asset names
 
-Upload these three files to the GitHub Release:
+Upload these files to the GitHub Release:
 
-- `det.onnx`
-- `rec.onnx`
+- `det_server.onnx` — PP-OCRv5 server detection model
+- `det_mobile.onnx` — PP-OCRv5 mobile detection model
+- `rec_server.onnx` — PP-OCRv5 server recognition model
+- `rec_mobile.onnx` — PP-OCRv5 mobile recognition model
 - `ppocr_keys_v1.txt`
 
 ## Prepare assets
@@ -46,14 +48,16 @@ models/pp-ocrv5/
 4. Push `main`
 5. Push a tag such as:
    ```bash
-   git tag models-ppocrv5-v1
-   git push origin models-ppocrv5-v1
+   git tag models-ppocrv5-v2
+   git push origin models-ppocrv5-v2
    ```
 
 The workflow in `.github/workflows/model-release.yml` will automatically create the GitHub Release and upload:
 
-- `det.onnx`
-- `rec.onnx`
+- `det_server.onnx`
+- `det_mobile.onnx`
+- `rec_server.onnx`
+- `rec_mobile.onnx`
 - `ppocr_keys_v1.txt`
 
 ## Default package URL
@@ -61,7 +65,7 @@ The workflow in `.github/workflows/model-release.yml` will automatically create 
 The package will use:
 
 ```text
-https://github.com/zxc88645/ffocr/releases/download/models-ppocrv5-v1
+https://github.com/zxc88645/ffocr/releases/download/models-ppocrv5-v2
 ```
 
 ## Updating models later
@@ -70,6 +74,6 @@ If you publish a new model set:
 
 1. Stage the new files into `site/models/pp-ocrv5/`
 2. Commit and push `main`
-3. Push a new tag such as `models-ppocrv5-v2`
+3. Push a new tag such as `models-ppocrv5-v3`
 4. Update `DEFAULT_MODEL_RELEASE_TAG` in `src/presets/ppocrv5.ts`
 5. Publish a new npm package version

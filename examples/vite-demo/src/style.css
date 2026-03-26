@@ -73,6 +73,12 @@ h2 {
   margin-bottom: 12px;
 }
 
+.inline-heading {
+  display: inline;
+  margin: 0;
+  font-size: 1rem;
+}
+
 .lead {
   max-width: 60ch;
   margin: 14px 0 0;
@@ -98,6 +104,12 @@ h2 {
   font-weight: 600;
 }
 
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
 input,
 select,
 button,
@@ -113,6 +125,11 @@ select {
   border-radius: 14px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.72);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
 }
 
 select {
@@ -240,6 +257,38 @@ pre {
   gap: 12px;
 }
 
+.result-log {
+  max-height: 480px;
+  font-size: 0.85rem;
+}
+
+.log-details summary {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.log-details summary::before {
+  content: "▶";
+  font-size: 0.7em;
+  transition: transform 0.15s;
+}
+
+.log-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.log-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.log-details pre {
+  margin-top: 8px;
+}
+
 @media (max-width: 720px) {
   .app {
     width: min(100vw - 20px, 1100px);
@@ -250,5 +299,9 @@ pre {
   .controls,
   .result-panel {
     padding: 20px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
   }
 }

@@ -22,10 +22,19 @@ Output:
 
 ```text
 models/pp-ocrv5/
-├── det.onnx
-├── rec.onnx
+├── det_server.onnx   (server detection)
+├── det_mobile.onnx   (mobile detection)
+├── rec_server.onnx   (server recognition)
+├── rec_mobile.onnx   (mobile recognition)
 └── ppocr_keys_v1.txt
 ```
+
+## Model variants
+
+| Variant | Detection | Recognition | Characteristics |
+|---------|-----------|-------------|-----------------|
+| server  | `det_server.onnx` | `rec_server.onnx` | Higher accuracy, larger model |
+| mobile  | `det_mobile.onnx` | `rec_mobile.onnx` | Faster inference, smaller model |
 
 ## Optional Pages hosting
 
