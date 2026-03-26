@@ -2,6 +2,8 @@
 
 Browser OCR for frontend apps using PaddleOCR models converted to ONNX.
 
+**Live Demo**: https://zxc88645.github.io/ffocr/demo/
+
 ## Install
 
 ```bash
@@ -31,6 +33,28 @@ const ocr = createPPOcrV5({
 
 const result = await ocr.ocr(fileOrBlobOrUrl);
 console.log(result.text);
+```
+
+## Progress callback
+
+Track loading, download, and inference progress via `onProgress`:
+
+```ts
+const result = await ocr.ocr(file, {
+  onProgress({ phase, current, total, loaded, totalBytes }) {
+    // phase: "loading_dictionary" | "loading_detection_model"
+    //      | "loading_recognition_model" | "warmup"
+    //      | "preprocessing" | "detecting" | "recognizing"
+    if (loaded != null && totalBytes != null) {
+      const pct = Math.round((loaded / totalBytes) * 100);
+      console.log(`${phase}: ${pct}%`);
+    } else if (phase === "recognizing") {
+      console.log(`Recognizing ${current}/${total}`);
+    } else {
+      console.log(phase);
+    }
+  }
+});
 ```
 
 ## Main API

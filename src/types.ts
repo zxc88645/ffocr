@@ -95,8 +95,31 @@ export interface OcrResult {
   runtime: RuntimeSelection;
 }
 
+export type OcrProgressPhase =
+  | "loading_dictionary"
+  | "loading_detection_model"
+  | "loading_recognition_model"
+  | "warmup"
+  | "preprocessing"
+  | "detecting"
+  | "recognizing";
+
+export interface OcrProgress {
+  phase: OcrProgressPhase;
+  /** Batch progress for the recognizing phase. */
+  current?: number;
+  total?: number;
+  /** Bytes downloaded so far (model loading phases). */
+  loaded?: number;
+  /** Total bytes to download, if known from Content-Length. */
+  totalBytes?: number;
+}
+
+export type OcrProgressCallback = (progress: OcrProgress) => void;
+
 export interface OcrOptions {
   maxRecognitionBatchSize?: number;
+  onProgress?: OcrProgressCallback;
 }
 
 export type OcrImageSource =

@@ -3,6 +3,7 @@ import {
   createPPOcrV5,
   getExecutionProviderSupport,
   type ExecutionProvider,
+  type OcrProgress,
   type OcrResult,
   type PPOcrV5ModelVariant
 } from "ffocr";
@@ -231,8 +232,17 @@ ui.runButton.addEventListener("click", async () => {
   const selectedProvider = ui.providerSelect.value as "auto" | ExecutionProvider;
   const selectedVariant = ui.variantSelect.value as PPOcrV5ModelVariant;
 
-  ui.status.textContent = `Loading ${selectedVariant} models, running OCR…`;
   ui.runButton.disabled = true;
+
+  const progressLabels: Record<OcrProgress["phase"], string> = {
+    loading_dictionary: "Loading dictionary…",
+    loading_detection_model: "Loading detection model…",
+    loading_recognition_model: "Loading recognition model…",
+    warmup: "Warming up models…",
+    preprocessing: "Preprocessing image…",
+    detecting: "Running text detection…",
+    recognizing: "Recognizing text…"
+  };
 
   const ocr = createPPOcrV5({
     baseUrl: modelBaseUrl,
@@ -243,7 +253,24 @@ ui.runButton.addEventListener("click", async () => {
 
   try {
     const startTime = performance.now();
-    const result = await ocr.ocr(file);
+    const result = await ocr.ocr(file, {
+      onProgress(progress) {
+        let label = progressLabels[progress.phase];
+        if (progress.loaded != null) {
+          const loadedMB = (progress.loaded / 1024 / 1024).toFixed(1);
+          if (progress.totalBytes != null) {
+            const totalMB = (progress.totalBytes / 1024 / 1024).toFixed(1);
+            const pct = Math.round((progress.loaded / progress.totalBytes) * 100);
+            label = `${progressLabels[progress.phase]} ${loadedMB}/${totalMB} MB (${pct}%)`;
+          } else {
+            label = `${progressLabels[progress.phase]} ${loadedMB} MB`;
+          }
+        } else if (progress.phase === "recognizing" && progress.total != null) {
+          label = `Recognizing text (${progress.current}/${progress.total})…`;
+        }
+        ui.status.textContent = label;
+      }
+    });
     const elapsed = performance.now() - startTime;
 
     lastResult = result;

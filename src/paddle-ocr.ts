@@ -6,6 +6,7 @@ import type {
   OcrImageSource,
   OcrLine,
   OcrOptions,
+  OcrProgressCallback,
   OcrResult,
   RuntimeSelection
 } from "./types";
@@ -81,22 +82,44 @@ export class PaddleOcrWeb {
     this.options = options;
   }
 
-  async init(): Promise<void> {
+  async init(onProgress?: OcrProgressCallback): Promise<void> {
     if (!this.initPromise) {
-      this.initPromise = this.doInit();
+      this.initPromise = this.doInit(onProgress);
     }
 
     return this.initPromise;
   }
 
-  private async doInit(): Promise<void> {
+  private async doInit(onProgress?: OcrProgressCallback): Promise<void> {
     configureOrt(this.options.ort);
+
+    onProgress?.({ phase: "loading_dictionary" });
     this.dictionary = await loadDictionary(this.options.manifest.dictionary);
+
     const provider = await this.selectProvider();
-    this.detectorSession = await createSession(this.options.manifest.detection.url, provider);
-    this.recognizerSession = await createSession(this.options.manifest.recognition.url, provider);
+
+    onProgress?.({ phase: "loading_detection_model" });
+    this.detectorSession = await createSession(
+      this.options.manifest.detection.url,
+      provider,
+      onProgress
+        ? (loaded, totalBytes) =>
+            onProgress({ phase: "loading_detection_model", loaded, totalBytes: totalBytes ?? undefined })
+        : undefined
+    );
+
+    onProgress?.({ phase: "loading_recognition_model" });
+    this.recognizerSession = await createSession(
+      this.options.manifest.recognition.url,
+      provider,
+      onProgress
+        ? (loaded, totalBytes) =>
+            onProgress({ phase: "loading_recognition_model", loaded, totalBytes: totalBytes ?? undefined })
+        : undefined
+    );
 
     if (this.options.warmup) {
+      onProgress?.({ phase: "warmup" });
       await this.warmupSessions();
     }
   }
@@ -153,17 +176,21 @@ export class PaddleOcrWeb {
   }
 
   async ocr(source: OcrImageSource, options: OcrOptions = {}): Promise<OcrResult> {
-    await this.init();
+    const onProgress = options.onProgress;
+    await this.init(onProgress);
 
     if (!this.detectorSession || !this.recognizerSession || !this.runtimeSelection) {
       throw new Error("The OCR runtime was not initialized.");
     }
 
+    onProgress?.({ phase: "preprocessing" });
     const image = await ensureImageData(source);
     const detectionInput = preprocessDetection(
       image,
       this.options.manifest.detectionLimitSideLen ?? 960
     );
+
+    onProgress?.({ phase: "detecting" });
     const detectionOutput = await runSession(
       this.detectorSession,
       detectionInput.data,
@@ -185,7 +212,7 @@ export class PaddleOcrWeb {
         minSize: this.options.manifest.detectionMinSize ?? 3
       })
     );
-    const lines = await this.recognizeBoxes(image, boxes, options.maxRecognitionBatchSize ?? 8);
+    const lines = await this.recognizeBoxes(image, boxes, options.maxRecognitionBatchSize ?? 8, onProgress);
 
     return {
       text: lines.map((line) => line.text).join("\n"),
@@ -201,7 +228,8 @@ export class PaddleOcrWeb {
   private async recognizeBoxes(
     image: ImageData,
     boxes: readonly OcrBox[],
-    batchSize: number
+    batchSize: number,
+    onProgress?: OcrProgressCallback
   ): Promise<OcrLine[]> {
     if (!this.recognizerSession) {
       throw new Error("Recognizer session is not available.");
@@ -210,8 +238,11 @@ export class PaddleOcrWeb {
     const recognitionShape =
       this.options.manifest.recognitionImageShape ?? DEFAULT_RECOGNITION_SHAPE;
     const lines: OcrLine[] = [];
+    const totalBatches = Math.ceil(boxes.length / batchSize);
+    let batchIndex = 0;
 
     for (let cursor = 0; cursor < boxes.length; cursor += batchSize) {
+      onProgress?.({ phase: "recognizing", current: batchIndex + 1, total: totalBatches });
       const batchBoxes = boxes.slice(cursor, cursor + batchSize);
       const tensors: Float32Array[] = [];
 
@@ -244,6 +275,8 @@ export class PaddleOcrWeb {
           box
         });
       });
+
+      batchIndex++;
     }
 
     return lines.filter((line) => line.text.length > 0);

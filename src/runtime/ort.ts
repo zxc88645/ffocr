@@ -3,6 +3,8 @@ import type { ExecutionProvider, OrtRuntimeOptions } from "../types";
 
 export type OrtSession = ort.InferenceSession;
 
+export type DownloadProgressCallback = (loaded: number, total: number | undefined) => void;
+
 let configured = false;
 
 export function configureOrt(options?: OrtRuntimeOptions): void {
@@ -21,11 +23,49 @@ export function configureOrt(options?: OrtRuntimeOptions): void {
   configured = true;
 }
 
+async function fetchWithProgress(
+  url: string,
+  onProgress?: DownloadProgressCallback
+): Promise<ArrayBuffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  }
+
+  if (!onProgress || !response.body) {
+    return response.arrayBuffer();
+  }
+
+  const contentLength = response.headers.get("content-length");
+  const total = contentLength ? parseInt(contentLength, 10) : undefined;
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let loaded = 0;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    loaded += value.byteLength;
+    onProgress(loaded, total);
+  }
+
+  const result = new Uint8Array(loaded);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return result.buffer;
+}
+
 export async function createSession(
   url: string,
-  provider: ExecutionProvider
+  provider: ExecutionProvider,
+  onDownloadProgress?: DownloadProgressCallback
 ): Promise<OrtSession> {
-  return ort.InferenceSession.create(url, {
+  const data = await fetchWithProgress(url, onDownloadProgress);
+  return ort.InferenceSession.create(data, {
     executionProviders: [provider],
     graphOptimizationLevel: "all"
   });
