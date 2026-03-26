@@ -7,7 +7,7 @@ Use GitHub Releases to host the default browser model files.
 Use a dedicated tag for hosted model assets:
 
 ```text
-models-ppocrv5-v2
+models-ppocrv5-v3
 ```
 
 That matches the current default URL exported by the package.
@@ -48,8 +48,8 @@ models/pp-ocrv5/
 4. Push `main`
 5. Push a tag such as:
    ```bash
-   git tag models-ppocrv5-v2
-   git push origin models-ppocrv5-v2
+   git tag models-ppocrv5-v3
+   git push origin models-ppocrv5-v3
    ```
 
 The workflow in `.github/workflows/model-release.yml` will automatically create the GitHub Release and upload:
@@ -65,7 +65,7 @@ The workflow in `.github/workflows/model-release.yml` will automatically create 
 The package will use:
 
 ```text
-https://github.com/zxc88645/ffocr/releases/download/models-ppocrv5-v2
+https://github.com/zxc88645/ffocr/releases/download/models-ppocrv5-v3
 ```
 
 ## Updating models later

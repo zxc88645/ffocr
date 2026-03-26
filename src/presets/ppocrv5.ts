@@ -9,7 +9,7 @@ import type {
 } from "../types";
 
 export const DEFAULT_ORT_WASM_PATHS = "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/";
-export const DEFAULT_MODEL_RELEASE_TAG = "models-ppocrv5-v2";
+export const DEFAULT_MODEL_RELEASE_TAG = "models-ppocrv5-v3";
 export const DEFAULT_MODEL_BASE_URL =
   `https://github.com/zxc88645/ffocr/releases/download/${DEFAULT_MODEL_RELEASE_TAG}`;
 
