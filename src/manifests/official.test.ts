@@ -18,14 +18,14 @@ describe("model path constants", () => {
 });
 
 describe("createPPOcrV5BrowserManifest", () => {
-  it("defaults to server variant", () => {
+  it("defaults to mobile variant", () => {
     const manifest = createPPOcrV5BrowserManifest({
       baseUrl: "https://example.com/models"
     });
 
-    expect(manifest.id).toBe("pp-ocrv5-browser");
-    expect(manifest.detection.url).toBe("https://example.com/models/det_server.onnx");
-    expect(manifest.recognition.url).toBe("https://example.com/models/rec_server.onnx");
+    expect(manifest.id).toBe("pp-ocrv5-mobile-browser");
+    expect(manifest.detection.url).toBe("https://example.com/models/det_mobile.onnx");
+    expect(manifest.recognition.url).toBe("https://example.com/models/rec_mobile.onnx");
     expect(manifest.dictionary).toEqual({ url: DEFAULT_DICTIONARY_URL });
   });
 
@@ -68,8 +68,8 @@ describe("createPPOcrV5BrowserManifest", () => {
       baseUrl: "https://example.com/models/"
     });
 
-    expect(manifest.detection.url).toBe("https://example.com/models/det_server.onnx");
-    expect(manifest.recognition.url).toBe("https://example.com/models/rec_server.onnx");
+    expect(manifest.detection.url).toBe("https://example.com/models/det_mobile.onnx");
+    expect(manifest.recognition.url).toBe("https://example.com/models/rec_mobile.onnx");
   });
 
   it("uses custom dictionary URL", () => {
