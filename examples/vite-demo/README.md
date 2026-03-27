@@ -20,13 +20,12 @@ By default, local development expects your converted model files to be served fr
 http://localhost:8080/models/pp-ocrv5
 ```
 
-That directory should contain:
+That directory must include the ONNX pair for the variant you select in the UI (`mobile` by default):
 
-- `det_server.onnx`
-- `det_mobile.onnx`
-- `rec_server.onnx`
-- `rec_mobile.onnx`
-- `ppocrv5_dict.txt`
+- **Mobile:** `det_mobile.onnx`, `rec_mobile.onnx`
+- **Server:** `det_server.onnx`, `rec_server.onnx`
+
+Include all four ONNX files if you switch variants in the UI. The demo does not set `dictionaryUrl`; the package loads the dictionary from PaddleOCR by default, so `ppocrv5_dict.txt` in this folder is not required unless you change that in code.
 
 If you host the files elsewhere, change the `Model Base URL` field in the UI.
 

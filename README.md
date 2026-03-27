@@ -112,15 +112,24 @@ Lower-level API for custom manifests or model paths.
 
 ## Required model files
 
-A model base URL must point to a folder containing:
+Your `baseUrl` should point to a folder that contains the **detection and recognition ONNX pair for the variant you use** (`mobile` by default):
 
-- `det_server.onnx`
-- `det_mobile.onnx`
-- `rec_server.onnx`
-- `rec_mobile.onnx`
-- `ppocrv5_dict.txt`
+- **Mobile:** `det_mobile.onnx`, `rec_mobile.onnx`
+- **Server:** `det_server.onnx`, `rec_server.onnx`
 
-The default hosted model URL only works after those files have been uploaded to the GitHub Release described in [`docs/MODEL_RELEASES.md`](./docs/MODEL_RELEASES.md).
+Override filenames with `detectionModelPath` / `recognitionModelPath` if your layout differs.
+
+**Dictionary:** By default the dictionary is loaded from the PaddleOCR project (not from `baseUrl`). To self-host it, set `dictionaryUrl` to your `ppocrv5_dict.txt` URL.
+
+## Default model URL
+
+`createDefaultPPOcrV5` loads weights from:
+
+```text
+https://zxc88645.github.io/ffocr/models/pp-ocrv5
+```
+
+Use `createPPOcrV5` with your own `baseUrl` when you need to self-host or pin assets.
 
 The bundled conversion flow patches the generated ONNX files so the default PP-OCRv5 models stay compatible with ONNX Runtime WebGPU.
 
@@ -142,5 +151,4 @@ The bundled conversion flow patches the generated ONNX files so the default PP-O
 ## Extra docs
 
 - Model conversion: [`docs/MODEL_CONVERSION.md`](./docs/MODEL_CONVERSION.md)
-- Model release hosting: [`docs/MODEL_RELEASES.md`](./docs/MODEL_RELEASES.md)
 - Example app: [`examples/vite-demo`](./examples/vite-demo/README.md)
