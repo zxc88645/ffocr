@@ -20,6 +20,9 @@ function assertElement<T>(value: T | null, label: string): T {
 
 const ui = {
   imageInput: assertElement(document.querySelector<HTMLInputElement>("#image-input"), "#image-input"),
+  imageUrlInput: assertElement(document.querySelector<HTMLInputElement>("#image-url"), "#image-url"),
+  sample1Button: assertElement(document.querySelector<HTMLButtonElement>("#sample-1"), "#sample-1"),
+  sample2Button: assertElement(document.querySelector<HTMLButtonElement>("#sample-2"), "#sample-2"),
   modelBaseUrlInput: assertElement(document.querySelector<HTMLInputElement>("#model-base-url"), "#model-base-url"),
   variantSelect: assertElement(document.querySelector<HTMLSelectElement>("#variant-select"), "#variant-select"),
   providerSelect: assertElement(document.querySelector<HTMLSelectElement>("#provider-select"), "#provider-select"),
@@ -67,6 +70,10 @@ function getDefaultModelBaseUrl(): string {
     return "http://localhost:8080/models/pp-ocrv5";
   }
   return new URL("../models/pp-ocrv5/", window.location.href).toString().replace(/\/$/, "");
+}
+
+function getSampleImageUrl(filename: "example1.png" | "example2.png"): string {
+  return `${import.meta.env.BASE_URL}${filename}`;
 }
 
 function formatProviderLabel(provider: ExecutionProvider): string {
@@ -217,6 +224,8 @@ function formatRawLog(result: OcrResult): string {
 }
 
 ui.modelBaseUrlInput.value = getDefaultModelBaseUrl();
+ui.imageUrlInput.value = getSampleImageUrl("example1.png");
+ui.preview.src = getSampleImageUrl("example1.png");
 updateProviderUi();
 clearOverlay();
 
@@ -225,18 +234,48 @@ ui.confidenceSlider.addEventListener("input", () => {
   updateFilteredOutput();
 });
 
-ui.imageInput.addEventListener("change", () => {
+function clearResultState(): void {
   clearOverlay();
   lastResult = null;
   ui.resultText.textContent = "";
   ui.resultLog.textContent = "";
   ui.resultRuntime.textContent = "";
+}
+
+ui.imageInput.addEventListener("change", () => {
+  if (ui.imageInput.files?.[0]) {
+    ui.imageUrlInput.value = "";
+  }
+  clearResultState();
+});
+
+ui.imageUrlInput.addEventListener("input", () => {
+  ui.imageInput.value = "";
+  clearResultState();
+});
+
+function applySampleImage(filename: "example1.png" | "example2.png"): void {
+  ui.imageInput.value = "";
+  const url = getSampleImageUrl(filename);
+  ui.imageUrlInput.value = url;
+  ui.preview.src = url;
+  clearResultState();
+}
+
+ui.sample1Button.addEventListener("click", () => {
+  applySampleImage("example1.png");
+});
+
+ui.sample2Button.addEventListener("click", () => {
+  applySampleImage("example2.png");
 });
 
 ui.runButton.addEventListener("click", async () => {
   const file = ui.imageInput.files?.[0];
-  if (!file) {
-    ui.status.textContent = "Choose an image first.";
+  const imageUrl = ui.imageUrlInput.value.trim();
+  const source: File | string | null = file ?? (imageUrl !== "" ? imageUrl : null);
+  if (!source) {
+    ui.status.textContent = "Choose an image file or enter an image URL.";
     return;
   }
 
@@ -246,8 +285,13 @@ ui.runButton.addEventListener("click", async () => {
     return;
   }
 
-  const objectUrl = URL.createObjectURL(file);
-  ui.preview.src = objectUrl;
+  let objectUrl: string | null = null;
+  if (file) {
+    objectUrl = URL.createObjectURL(file);
+    ui.preview.src = objectUrl;
+  } else {
+    ui.preview.src = imageUrl;
+  }
   clearOverlay();
   lastResult = null;
   ui.resultText.textContent = "";
@@ -273,7 +317,7 @@ ui.runButton.addEventListener("click", async () => {
 
   try {
     const startTime = performance.now();
-    const result = await ocr.ocr(file, {
+    const result = await ocr.ocr(source, {
       onProgress(progress) {
         let label = progressLabels[progress.phase];
         if (progress.loaded != null) {
@@ -308,6 +352,8 @@ ui.runButton.addEventListener("click", async () => {
       error instanceof Error ? `OCR failed: ${error.message}` : "OCR failed with an unknown error.";
   } finally {
     ui.runButton.disabled = false;
-    URL.revokeObjectURL(objectUrl);
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
   }
 });

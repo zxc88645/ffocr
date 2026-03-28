@@ -140,6 +140,27 @@ select {
   color: var(--muted);
 }
 
+.sample-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.sample-row .field-note {
+  width: 100%;
+  margin-bottom: -2px;
+}
+
+button.sample-btn {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
 .provider-detected {
   display: flex;
   flex-wrap: wrap;
@@ -204,7 +225,7 @@ button:disabled {
 #preview {
   display: block;
   max-width: 100%;
-  max-height: 420px;
+  max-height: 820px;
   border-radius: 18px;
 }
 

@@ -28,10 +28,30 @@
           />
         </label>
 
-        <label class="field">
-          <span>Image File</span>
-          <input id="image-input" type="file" accept="image/*" />
-        </label>
+        <div class="field">
+          <span id="image-field-label">Image File or URL</span>
+          <input
+            id="image-input"
+            type="file"
+            accept="image/*"
+            aria-labelledby="image-field-label"
+          />
+          <input
+            id="image-url"
+            type="text"
+            inputmode="url"
+            autocomplete="off"
+            placeholder="https://example.com/image.png"
+            spellcheck="false"
+            aria-labelledby="image-field-label"
+          />
+          <div class="sample-row" role="group" aria-label="Built-in sample images">
+            <span class="field-note">Built-in samples</span>
+            <button type="button" id="sample-1" class="sample-btn">Sample 1 (default)</button>
+            <button type="button" id="sample-2" class="sample-btn">Sample 2</button>
+          </div>
+          <small class="field-note">If no file is chosen, the URL above is used for OCR.</small>
+        </div>
 
         <div class="field-row">
           <label class="field">
@@ -50,7 +70,7 @@
 
         <label class="field">
           <span>Min Confidence: <output id="confidence-value">0.00</output></span>
-          <input id="confidence-slider" type="range" min="0" max="1" step="0.01" value="0" />
+          <input id="confidence-slider" type="range" min="0" max="1" step="0.01" value="0.5" />
           <small class="field-note">Lines below this confidence score will be hidden from overlay and text output.</small>
         </label>
 
@@ -58,7 +78,7 @@
         <div id="provider-detected" class="provider-detected" aria-live="polite"></div>
 
         <button id="run-button" type="button">Run OCR</button>
-        <p id="status" class="status">Select an image to begin.</p>
+        <p id="status" class="status">Default sample image is ready — click Run OCR or choose another source.</p>
       </section>
 
       <section class="panel preview-panel">
