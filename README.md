@@ -12,6 +12,8 @@ Browser OCR for frontend apps using PaddleOCR models converted to ONNX.
 npm install ffocr
 ```
 
+The examples below use ESM `import` (Vite, webpack, modern Node, and so on). The package also publishes **ESM** (`.mjs`) and **CommonJS** (`.cjs`) via `package.json` `exports`; if you need `require`, see [CommonJS](#commonjs).
+
 ## Quick start
 
 If you want the built-in hosted model:
@@ -36,6 +38,17 @@ const ocr = createPPOcrV5({
 const result = await ocr.ocr(fileOrBlobOrUrl);
 console.log(result.text);
 ```
+
+### Result
+
+`ocr()` resolves to an **`OcrResult`** object:
+
+| Field | Meaning |
+| --- | --- |
+| **`text`** | Full recognized text, lines joined (handy for search or copy-paste). |
+| **`lines`** | Each detected line: `text`, confidence `score` (0–1), and `box` (four corner `points` plus a box `score`). Use this for overlays or per-line UI. |
+| **`image`** | Input dimensions: `width` and `height`. |
+| **`runtime`** | Which ONNX Runtime provider was selected (`provider`), what was tried (`candidates`), and optional timing `benchmarks` when auto-benchmarking is enabled. |
 
 ## Model variant
 
@@ -147,6 +160,31 @@ The bundled conversion flow patches the generated ONNX files so the default PP-O
 
 - Detects available ONNX Runtime Web execution providers including `webgpu`, `webnn`, `webgl`, and `wasm`
 - In `auto` mode, picks the first available provider in this order: `webgpu` -> `webnn` -> `webgl` -> `wasm`
+
+## CommonJS
+
+If you use CommonJS in Node or an older toolchain:
+
+```js
+const { createDefaultPPOcrV5 } = require("ffocr");
+```
+
+## CDN (no bundler)
+
+Prefer **npm plus a bundler** (Vite, webpack, Rollup, etc.) so dependencies resolve predictably and you can tree-shake. The section below is for cases where you cannot use a bundler.
+
+Pin a specific version in the URL in production (for example `ffocr@0.1.11`).
+
+```html
+<script>
+  const { createDefaultPPOcrV5 } = await import("https://cdn.jsdelivr.net/npm/ffocr/+esm");
+
+  const ocr = await createDefaultPPOcrV5();
+  const result = await ocr.ocr("https://imgcdn.cna.com.tw/www/WebPhotos/800/20250321/1210x923_wmkn_673016459746_0.jpg");
+
+  console.log(result);
+</script>
+```
 
 ## Extra docs
 
