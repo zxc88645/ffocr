@@ -175,15 +175,13 @@ Prefer **npm plus a bundler** (Vite, webpack, Rollup, etc.) so dependencies reso
 
 Pin a specific version in the URL in production (for example `ffocr@0.1.11`).
 
-```html
-<script>
-  const { createDefaultPPOcrV5 } = await import("https://cdn.jsdelivr.net/npm/ffocr/+esm");
+```js
+const { createDefaultPPOcrV5 } = await import("https://cdn.jsdelivr.net/npm/ffocr/+esm");
 
-  const ocr = await createDefaultPPOcrV5();
-  const result = await ocr.ocr("https://imgcdn.cna.com.tw/www/WebPhotos/800/20250321/1210x923_wmkn_673016459746_0.jpg");
+const ocr = await createDefaultPPOcrV5();
+const result = await ocr.ocr("https://zxc88645.github.io/ffocr/demo/example1.png");
 
-  console.log(result);
-</script>
+console.log(result);
 ```
 
 ## Extra docs
