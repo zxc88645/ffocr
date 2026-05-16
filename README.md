@@ -186,5 +186,7 @@ console.log(result);
 
 ## Extra docs
 
+- Release & versioning: [`docs/RELEASE.md`](./docs/RELEASE.md)
 - Model conversion: [`docs/MODEL_CONVERSION.md`](./docs/MODEL_CONVERSION.md)
 - Example app: [`examples/vite-demo`](./examples/vite-demo/README.md)
+- AI / maintainer guide: [`AGENTS.md`](./AGENTS.md)
