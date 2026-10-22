@@ -66,6 +66,15 @@ describe("preprocessDetection", () => {
     expect(result.data.length).toBe(3 * result.resizedWidth * result.resizedHeight);
   });
 
+  it("uses the given mean and std instead of the ImageNet defaults", () => {
+    const source = createFakeImageData(32, 32);
+    const defaults = preprocessDetection(source, 736);
+    const custom = preprocessDetection(source, 736, [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]);
+
+    expect(custom.data[0]).toBeCloseTo((128 / 255 - 0.5) / 0.5, 5);
+    expect(defaults.data[0]).toBeCloseTo((128 / 255 - 0.485) / 0.229, 5);
+  });
+
   it("tensor values are normalized", () => {
     const source = createFakeImageData(64, 64);
     const result = preprocessDetection(source, 736);

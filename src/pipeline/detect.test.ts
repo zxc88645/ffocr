@@ -188,4 +188,27 @@ describe("postprocessDetection", () => {
       postprocessDetection(new Float32Array(10), [10], makeOptions())
     ).toThrow("Unsupported detection output shape");
   });
+
+  it("joins regions split by a one-pixel gap when dilation is on", () => {
+    const width = 20;
+    const height = 10;
+    const map = new Float32Array(width * height);
+
+    for (let y = 3; y <= 6; y++) {
+      for (let x = 2; x <= 8; x++) map[y * width + x] = 0.9;
+      for (let x = 10; x <= 16; x++) map[y * width + x] = 0.9;
+    }
+
+    const options = makeOptions({
+      sourceWidth: width,
+      sourceHeight: height,
+      resizedWidth: width,
+      resizedHeight: height
+    });
+
+    expect(postprocessDetection(map, [1, 1, height, width], options)).toHaveLength(2);
+    expect(
+      postprocessDetection(map, [1, 1, height, width], { ...options, dilate: true })
+    ).toHaveLength(1);
+  });
 });

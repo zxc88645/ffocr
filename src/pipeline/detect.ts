@@ -10,6 +10,8 @@ export interface DetectionPostprocessOptions {
   boxThreshold: number;
   unclipRatio: number;
   minSize: number;
+  /** Grow the text mask by one pixel (a 2x2 dilation, as PaddleOCR's `use_dilation`). */
+  dilate?: boolean;
 }
 
 interface ComponentBox {
@@ -53,6 +55,37 @@ function createAxisAlignedBox(
   };
 }
 
+function createTextMask(
+  map: Float32Array,
+  width: number,
+  height: number,
+  threshold: number,
+  dilate: boolean
+): Uint8Array {
+  const mask = new Uint8Array(width * height);
+  for (let i = 0; i < mask.length; i += 1) {
+    mask[i] = map[i] >= threshold ? 1 : 0;
+  }
+
+  if (!dilate) {
+    return mask;
+  }
+
+  const grown = mask.slice();
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (!mask[y * width + x]) {
+        continue;
+      }
+      if (x + 1 < width) grown[y * width + x + 1] = 1;
+      if (y + 1 < height) grown[(y + 1) * width + x] = 1;
+      if (x + 1 < width && y + 1 < height) grown[(y + 1) * width + x + 1] = 1;
+    }
+  }
+
+  return grown;
+}
+
 function normalizeProbabilityMap(
   raw: Float32Array,
   dims: readonly number[]
@@ -82,6 +115,7 @@ export function postprocessDetection(
   options: DetectionPostprocessOptions
 ): OcrBox[] {
   const { map, height, width } = normalizeProbabilityMap(raw, dims);
+  const mask = createTextMask(map, width, height, options.threshold, options.dilate ?? false);
   const visited = new Uint8Array(width * height);
   const queue = new Uint32Array(width * height);
   const results: OcrBox[] = [];
@@ -89,7 +123,7 @@ export function postprocessDetection(
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const root = y * width + x;
-      if (visited[root] || map[root] < options.threshold) {
+      if (visited[root] || !mask[root]) {
         continue;
       }
 
@@ -132,7 +166,7 @@ export function postprocessDetection(
             }
 
             const next = ny * width + nx;
-            if (visited[next] || map[next] < options.threshold) {
+            if (visited[next] || !mask[next]) {
               continue;
             }
 

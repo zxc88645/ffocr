@@ -191,7 +191,9 @@ export class PaddleOcrWeb {
     const image = await ensureImageData(source);
     const detectionInput = preprocessDetection(
       image,
-      this.options.manifest.detectionLimitSideLen ?? 960
+      this.options.manifest.detectionLimitSideLen ?? 960,
+      this.options.manifest.detectionMean,
+      this.options.manifest.detectionStd
     );
 
     onProgress?.({ phase: "detecting" });
@@ -213,7 +215,8 @@ export class PaddleOcrWeb {
         threshold: this.options.manifest.detectionThreshold ?? 0.3,
         boxThreshold: this.options.manifest.detectionBoxThreshold ?? 0.6,
         unclipRatio: this.options.manifest.detectionUnclipRatio ?? 1.5,
-        minSize: this.options.manifest.detectionMinSize ?? 3
+        minSize: this.options.manifest.detectionMinSize ?? 3,
+        dilate: this.options.manifest.detectionDilation ?? false
       })
     );
     const lines = await this.recognizeBoxes(image, boxes, options.maxRecognitionBatchSize ?? 8, onProgress);

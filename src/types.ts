@@ -23,6 +23,12 @@ export interface PaddleOcrModelManifest {
   detectionBoxThreshold?: number;
   detectionUnclipRatio?: number;
   detectionMinSize?: number;
+  /** Detection input mean, in the model's BGR channel order. Defaults to ImageNet values. */
+  detectionMean?: readonly [blue: number, green: number, red: number];
+  /** Detection input std, in the model's BGR channel order. Defaults to ImageNet values. */
+  detectionStd?: readonly [blue: number, green: number, red: number];
+  /** Dilate the detection mask before finding boxes. Defaults to false. */
+  detectionDilation?: boolean;
   recognitionImageShape?: readonly [channels: number, height: number, width: number];
 }
 

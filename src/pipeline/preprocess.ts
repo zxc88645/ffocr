@@ -2,8 +2,8 @@ import { resizeImageData } from "../io/canvas";
 import { roundUpToMultiple } from "../utils/math";
 
 // PaddleOCR normalizes in BGR channel order with ImageNet values
-const DET_MEAN_BGR = [0.485, 0.456, 0.406] as const;
-const DET_STD_BGR = [0.229, 0.224, 0.225] as const;
+const DET_MEAN_BGR: readonly [number, number, number] = [0.485, 0.456, 0.406];
+const DET_STD_BGR: readonly [number, number, number] = [0.229, 0.224, 0.225];
 
 export interface DetectionPreprocessResult {
   data: Float32Array;
@@ -19,7 +19,9 @@ export interface RecognitionPreprocessResult {
 
 export function preprocessDetection(
   source: ImageData,
-  limitSideLen: number
+  limitSideLen: number,
+  mean: readonly [number, number, number] = DET_MEAN_BGR,
+  std: readonly [number, number, number] = DET_STD_BGR
 ): DetectionPreprocessResult {
   const maxSide = Math.max(source.width, source.height);
   const scale = maxSide > limitSideLen ? limitSideLen / maxSide : 1;
@@ -35,11 +37,11 @@ export function preprocessDetection(
       const green = resized.data[pixelOffset + 1] / 255;
       const blue = resized.data[pixelOffset + 2] / 255;
       const spatialOffset = y * resizedWidth + x;
-      tensor[spatialOffset] = (blue - DET_MEAN_BGR[0]) / DET_STD_BGR[0];
+      tensor[spatialOffset] = (blue - mean[0]) / std[0];
       tensor[resizedWidth * resizedHeight + spatialOffset] =
-        (green - DET_MEAN_BGR[1]) / DET_STD_BGR[1];
+        (green - mean[1]) / std[1];
       tensor[2 * resizedWidth * resizedHeight + spatialOffset] =
-        (red - DET_MEAN_BGR[2]) / DET_STD_BGR[2];
+        (red - mean[2]) / std[2];
     }
   }
 
