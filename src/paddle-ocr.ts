@@ -14,7 +14,11 @@ import { cropImageData, ensureImageData } from "./io/canvas";
 import { createSession, configureOrt, runSession, type OrtSession } from "./runtime/ort";
 import { getProviderCandidates } from "./runtime/provider";
 import { postprocessDetection } from "./pipeline/detect";
-import { preprocessDetection, preprocessRecognition } from "./pipeline/preprocess";
+import {
+  preprocessDetection,
+  preprocessRecognition,
+  recognitionBatchShape
+} from "./pipeline/preprocess";
 import { decodeRecognitionOutput } from "./pipeline/recognize";
 import { axisAlignedBounds, sortBoxes } from "./utils/math";
 
@@ -248,16 +252,15 @@ export class PaddleOcrWeb {
     for (let cursor = 0; cursor < boxes.length; cursor += batchSize) {
       onProgress?.({ phase: "recognizing", current: batchIndex + 1, total: totalBatches });
       const batchBoxes = boxes.slice(cursor, cursor + batchSize);
-      const tensors: Float32Array[] = [];
-
-      for (const box of batchBoxes) {
+      const crops = batchBoxes.map((box) => {
         const bounds = axisAlignedBounds(box);
-        const crop = cropImageData(image, bounds.left, bounds.top, bounds.width, bounds.height);
-        tensors.push(preprocessRecognition(crop, recognitionShape).data);
-      }
+        return cropImageData(image, bounds.left, bounds.top, bounds.width, bounds.height);
+      });
+      const batchShape = recognitionBatchShape(crops, recognitionShape);
+      const tensors = crops.map((crop) => preprocessRecognition(crop, batchShape).data);
 
-      const merged = combineRecognitionBatch(tensors, recognitionShape);
-      const [channels, height, width] = recognitionShape;
+      const merged = combineRecognitionBatch(tensors, batchShape);
+      const [channels, height, width] = batchShape;
       const recognitionOutput = await runSession(
         this.recognizerSession,
         merged,

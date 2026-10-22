@@ -1,9 +1,11 @@
 import { resizeImageData } from "../io/canvas";
-import { roundUpToMultiple } from "../utils/math";
+import { clamp, roundUpToMultiple } from "../utils/math";
 
 // PaddleOCR normalizes in BGR channel order with ImageNet values
 const DET_MEAN_BGR = [0.485, 0.456, 0.406] as const;
 const DET_STD_BGR = [0.229, 0.224, 0.225] as const;
+
+const MAX_RECOGNITION_WIDTH = 3200;
 
 export interface DetectionPreprocessResult {
   data: Float32Array;
@@ -51,13 +53,27 @@ export function preprocessDetection(
   };
 }
 
+// Like PaddleOCR, size each batch to its widest line so long lines keep their aspect ratio
+export function recognitionBatchShape(
+  crops: readonly { width: number; height: number }[],
+  imageShape: readonly [number, number, number]
+): [number, number, number] {
+  const [channels, height, baseWidth] = imageShape;
+  const widestRatio = crops.reduce(
+    (widest, crop) => Math.max(widest, crop.width / Math.max(crop.height, 1)),
+    0
+  );
+  const width = clamp(Math.ceil(height * widestRatio), baseWidth, MAX_RECOGNITION_WIDTH);
+  return [channels, height, width];
+}
+
 export function preprocessRecognition(
   source: ImageData,
   imageShape: readonly [number, number, number]
 ): RecognitionPreprocessResult {
   const [, targetHeight, targetWidth] = imageShape;
   const ratio = source.width / Math.max(source.height, 1);
-  const resizedWidth = Math.min(targetWidth, Math.max(1, Math.round(targetHeight * ratio)));
+  const resizedWidth = Math.min(targetWidth, Math.max(1, Math.ceil(targetHeight * ratio)));
   const resized = resizeImageData(source, resizedWidth, targetHeight);
   const tensor = new Float32Array(3 * targetHeight * targetWidth);
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { preprocessDetection, preprocessRecognition } from "./preprocess";
+import { preprocessDetection, preprocessRecognition, recognitionBatchShape } from "./preprocess";
 
 vi.mock("../io/canvas", () => ({
   resizeImageData: (_source: ImageData, width: number, height: number): ImageData => {
@@ -114,5 +114,36 @@ describe("preprocessRecognition", () => {
 
     expect(result.dims).toEqual([1, 3, 48, 320]);
     expect(result.data.length).toBe(3 * 48 * 320);
+  });
+});
+
+describe("recognitionBatchShape", () => {
+  it("keeps the base width when every crop fits", () => {
+    const crops = [createFakeImageData(100, 48), createFakeImageData(200, 48)];
+
+    expect(recognitionBatchShape(crops, [3, 48, 320])).toEqual([3, 48, 320]);
+  });
+
+  it("widens the batch to the longest line's aspect ratio", () => {
+    const crops = [createFakeImageData(100, 48), createFakeImageData(500, 24)];
+
+    expect(recognitionBatchShape(crops, [3, 48, 320])).toEqual([3, 48, 1000]);
+  });
+
+  it("caps extremely long lines", () => {
+    const crops = [createFakeImageData(10000, 20)];
+
+    expect(recognitionBatchShape(crops, [3, 48, 320])).toEqual([3, 48, 3200]);
+  });
+
+  it("lets a long crop fill the widened shape instead of being squeezed", () => {
+    const source = createFakeImageData(1000, 48);
+    const shape = recognitionBatchShape([source], [3, 48, 320]);
+    const result = preprocessRecognition(source, shape);
+
+    const [, height, width] = shape;
+    const lastColumn = (height - 1) * width + width - 1;
+    expect(result.dims).toEqual([1, 3, 48, 1000]);
+    expect(result.data[lastColumn]).not.toBe(0);
   });
 });
