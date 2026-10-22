@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { preprocessDetection, preprocessRecognition } from "./preprocess";
+import { isSidewaysCrop, preprocessDetection, preprocessRecognition } from "./preprocess";
 
 vi.mock("../io/canvas", () => ({
   resizeImageData: (_source: ImageData, width: number, height: number): ImageData => {
@@ -114,5 +114,21 @@ describe("preprocessRecognition", () => {
 
     expect(result.dims).toEqual([1, 3, 48, 320]);
     expect(result.data.length).toBe(3 * 48 * 320);
+  });
+});
+
+describe("isSidewaysCrop", () => {
+  it("treats a tall text-sized box as sideways", () => {
+    expect(isSidewaysCrop({ width: 30, height: 200 })).toBe(true);
+  });
+
+  it("leaves horizontal and square boxes alone", () => {
+    expect(isSidewaysCrop({ width: 200, height: 30 })).toBe(false);
+    expect(isSidewaysCrop({ width: 80, height: 100 })).toBe(false);
+  });
+
+  it("ignores thin rules and small specks", () => {
+    expect(isSidewaysCrop({ width: 4, height: 300 })).toBe(false);
+    expect(isSidewaysCrop({ width: 12, height: 40 })).toBe(false);
   });
 });

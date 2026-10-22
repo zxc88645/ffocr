@@ -5,6 +5,11 @@ import { roundUpToMultiple } from "../utils/math";
 const DET_MEAN_BGR = [0.485, 0.456, 0.406] as const;
 const DET_STD_BGR = [0.229, 0.224, 0.225] as const;
 
+// Thin rules and specks are tall too; only boxes big enough to hold sideways text count
+const SIDEWAYS_RATIO = 1.5;
+const SIDEWAYS_MIN_WIDTH = 10;
+const SIDEWAYS_MIN_HEIGHT = 60;
+
 export interface DetectionPreprocessResult {
   data: Float32Array;
   dims: [1, 3, number, number];
@@ -49,6 +54,14 @@ export function preprocessDetection(
     resizedWidth,
     resizedHeight
   };
+}
+
+export function isSidewaysCrop(crop: { width: number; height: number }): boolean {
+  return (
+    crop.height >= SIDEWAYS_RATIO * crop.width &&
+    crop.width >= SIDEWAYS_MIN_WIDTH &&
+    crop.height >= SIDEWAYS_MIN_HEIGHT
+  );
 }
 
 export function preprocessRecognition(

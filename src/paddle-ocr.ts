@@ -10,15 +10,21 @@ import type {
   OcrResult,
   RuntimeSelection
 } from "./types";
-import { cropImageData, ensureImageData } from "./io/canvas";
+import { cropImageData, ensureImageData, rotateImageData } from "./io/canvas";
 import { createSession, configureOrt, runSession, type OrtSession } from "./runtime/ort";
 import { getProviderCandidates } from "./runtime/provider";
 import { postprocessDetection } from "./pipeline/detect";
-import { preprocessDetection, preprocessRecognition } from "./pipeline/preprocess";
+import {
+  isSidewaysCrop,
+  preprocessDetection,
+  preprocessRecognition
+} from "./pipeline/preprocess";
 import { decodeRecognitionOutput } from "./pipeline/recognize";
 import { axisAlignedBounds, sortBoxes } from "./utils/math";
 
 const DEFAULT_RECOGNITION_SHAPE = [3, 48, 320] as const;
+// Below this score a sideways line is also read turned the other way
+const SIDEWAYS_CONFIDENT_SCORE = 0.85;
 
 function now(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -248,13 +254,17 @@ export class PaddleOcrWeb {
     for (let cursor = 0; cursor < boxes.length; cursor += batchSize) {
       onProgress?.({ phase: "recognizing", current: batchIndex + 1, total: totalBatches });
       const batchBoxes = boxes.slice(cursor, cursor + batchSize);
-      const tensors: Float32Array[] = [];
-
-      for (const box of batchBoxes) {
+      const crops = batchBoxes.map((box) => {
         const bounds = axisAlignedBounds(box);
-        const crop = cropImageData(image, bounds.left, bounds.top, bounds.width, bounds.height);
-        tensors.push(preprocessRecognition(crop, recognitionShape).data);
-      }
+        return cropImageData(image, bounds.left, bounds.top, bounds.width, bounds.height);
+      });
+      const sideways = crops.map(isSidewaysCrop);
+      // Like RapidOCR, turn sideways lines anticlockwise first
+      const tensors = crops.map(
+        (crop, index) =>
+          preprocessRecognition(sideways[index] ? rotateImageData(crop, false) : crop, recognitionShape)
+            .data
+      );
 
       const merged = combineRecognitionBatch(tensors, recognitionShape);
       const [channels, height, width] = recognitionShape;
@@ -270,6 +280,29 @@ export class PaddleOcrWeb {
         recognitionOutput.dims,
         this.dictionary
       );
+
+      for (let index = 0; index < decoded.length; index += 1) {
+        if (!sideways[index] || decoded[index].score >= SIDEWAYS_CONFIDENT_SCORE) {
+          continue;
+        }
+
+        const turned = preprocessRecognition(rotateImageData(crops[index], true), recognitionShape);
+        const output = await runSession(
+          this.recognizerSession,
+          turned.data,
+          turned.dims,
+          this.options.manifest.recognition.inputName,
+          this.options.manifest.recognition.outputName
+        );
+        const [alternative] = decodeRecognitionOutput(
+          output.data as Float32Array,
+          output.dims,
+          this.dictionary
+        );
+        if (alternative && alternative.score > decoded[index].score) {
+          decoded[index] = alternative;
+        }
+      }
 
       decoded.forEach((item, index) => {
         const box = batchBoxes[index];

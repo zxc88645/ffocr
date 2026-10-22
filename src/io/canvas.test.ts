@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cropImageData } from "./canvas";
+import { cropImageData, rotateImageData } from "./canvas";
 
 function createTestImageData(width: number, height: number): ImageData {
   const data = new Uint8ClampedArray(width * height * 4);
@@ -72,5 +72,32 @@ describe("cropImageData", () => {
     const row2Offset = 3 * 4; // width * 4
     expect(cropped.data[row2Offset]).toBe(5);     // R = x = 5
     expect(cropped.data[row2Offset + 1]).toBe(6); // G = y = 6
+  });
+});
+
+describe("rotateImageData", () => {
+  function pixelAt(image: ImageData, x: number, y: number): number[] {
+    const offset = (y * image.width + x) * 4;
+    return [image.data[offset], image.data[offset + 1]];
+  }
+
+  it("turns a tall image anticlockwise", () => {
+    const source = createTestImageData(2, 3);
+    const rotated = rotateImageData(source, false);
+
+    expect([rotated.width, rotated.height]).toEqual([3, 2]);
+    // The top-right corner moves to the top-left
+    expect(pixelAt(rotated, 0, 0)).toEqual([1, 0]);
+    expect(pixelAt(rotated, 2, 1)).toEqual([0, 2]);
+  });
+
+  it("turns a tall image clockwise", () => {
+    const source = createTestImageData(2, 3);
+    const rotated = rotateImageData(source, true);
+
+    expect([rotated.width, rotated.height]).toEqual([3, 2]);
+    // The bottom-left corner moves to the top-left
+    expect(pixelAt(rotated, 0, 0)).toEqual([0, 2]);
+    expect(pixelAt(rotated, 2, 1)).toEqual([1, 0]);
   });
 });

@@ -156,3 +156,19 @@ export function cropImageData(
 
   return new ImageData(pixels, w, h);
 }
+
+export function rotateImageData(source: ImageData, clockwise: boolean): ImageData {
+  const { width, height, data } = source;
+  const pixels = new Uint8ClampedArray(width * height * 4);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const targetX = clockwise ? height - 1 - y : y;
+      const targetY = clockwise ? x : width - 1 - x;
+      const from = (y * width + x) * 4;
+      pixels.set(data.subarray(from, from + 4), (targetY * height + targetX) * 4);
+    }
+  }
+
+  return new ImageData(pixels, height, width);
+}
